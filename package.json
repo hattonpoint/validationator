@@ -2,14 +2,15 @@
   "name": "validationator",
   "version": "1.0.0",
   "description": "A versitile data validator and static type checker. Creat complex models for deeply nested data structures. Create statically typed functions. Switch to bool mode of use in form validation.",
-  "main": "index.js",
+  "main": "dist/bundle.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
     "test": "./node_modules/mocha/bin/mocha",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "build": "webpack"
   },
   "repository": "asdf",
   "keywords": [
@@ -29,9 +30,13 @@
   "author": "Ian Lancaster",
   "license": "ISC",
   "dependencies": {
+    "@babel/core": "^7.0.0-beta.37",
+    "@babel/preset-env": "^7.0.0-beta.37",
+    "babel-loader": "^8.0.0-beta.0",
     "chai": "^4.1.2",
     "eslint-config-standart": "^0.2.0",
-    "mocha": "^4.1.0"
+    "mocha": "^4.1.0",
+    "webpack": "^3.10.0"
   },
   "devDependencies": {
     "eslint": "^4.15.0",
