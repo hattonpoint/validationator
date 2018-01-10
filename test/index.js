@@ -1,5 +1,41 @@
+const readline = require('readline')
 const assert = require('chai').assert
-const { validate, validateFunc } = require('../src')
+let validateFunc
+let validate
+
+describe('SETUP', () => {
+  it('passes setup', next => {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    })
+
+    rl.question(`
+Please specify and environment:
+
+  a - src
+  b - dist
+  c - package
+
+`, res => {
+        if (res.toLowerCase() === 'a') {
+          validate = require('../src').validate
+          validateFunc = require('../src').validateFunc
+        } else if (res.toLowerCase() === 'b') {
+          validate = require('../dist').validate
+          validateFunc = require('../dist').validateFunc
+        } else if (res.toLowerCase() === 'c') {
+          validate = require('validationator').validate
+          validateFunc = require('validationator').validateFunc
+        } else {
+          throw new Error('that did not match any of the options!')
+        }
+
+        rl.close()
+        next()
+      })
+  }).timeout(30 * 1000)
+})
 
 describe('validate.js tests', () => {
   context('STRING', () => {

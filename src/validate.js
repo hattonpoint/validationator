@@ -91,10 +91,6 @@ const validate = (value, validation, options = {}) => {
 
         case 'string': {
           const { maxLength, minLength, regEx } = validation
-          // TODO: Add options for checking different case styles
-          // TODO: Options to recreate password validation. Use at least once etc
-          // TODO: Add shorthand for type only check validate('asdf', 'string')
-          // TODO: Migrate name to the options object
           if (typeof value !== 'string') throw new Error(`Expected ${name} to be type string. Got ${typeof value}`)
           if (typeof minLength === 'undefined' ? false : value.length < minLength) throw new Error(`String length is less than minimum`)
           if (typeof maxLength === 'undefined' ? false : value.length > maxLength) throw new Error(`String length is more than maximum`)
