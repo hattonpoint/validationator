@@ -1,7 +1,11 @@
 const validate = (value, validation, options = {}) => {
   const name = options.name || ''
+  const ON = (options.on || validate.on)
+  const OFF = (options.off || validate.off)
+  const WARN = (options.warn || validate.warn)
+  const BOOL = (options.bool || validate.bool)
 
-  const shouldBypassValidation = () => (process.env.NODE_ENV === 'production' || options.off) && (!options.on || !options.bool)
+  const shouldBypassValidation = () => (process.env.NODE_ENV === 'production' || OFF) && (!ON || !BOOL)
 
   const runOrValidation = name => {
     let failedCount = 0
@@ -33,10 +37,10 @@ const validate = (value, validation, options = {}) => {
       // Check for missing value and run required checks
       if (!value && !isAcceptedNull(value)) {
         if (validation.notRequired) {
-          if (options.bool) return true
+          if (BOOL) return true
           else return
         } else {
-          if (options.bool) return false
+          if (BOOL) return false
           else throw new Error(`Argument '${name}' is required!`)
         }
       }
@@ -46,23 +50,23 @@ const validate = (value, validation, options = {}) => {
       if (!validation.type) throw new Error(`${name}.type is required`)
       if (validation.extend) validation.extend(value, validation, name, options)
 
-      let validations = require('./validations')()
+      let validations = require('./validations')
       if (validate.extensions) validations = [ ...validations, ...validate.extensions ]
 
       for (let i = 0; i < validations.length; i++) {
         const currentValidation = validations[i]
-        if (validation.type === currentValidation.type) {
+        if (validation.type.toLowerCase() === currentValidation.type) {
           currentValidation.rules(value, validation, name)
           break
         }
       }
 
-      if (options.bool) return true
+      if (BOOL) return true
     }
   } catch (err) {
-    if (options.warn) {
+    if (WARN) {
       console.warn(err)
-    } else if (options.bool) {
+    } else if (BOOL) {
       return false
     } else {
       throw err

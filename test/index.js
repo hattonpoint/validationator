@@ -334,6 +334,11 @@ describe('validate.js tests', () => {
     it('bool', () => {
       assert(validate('asdf', { type: 'string' }, { bool: true }))
       assert(!validate(33, { type: 'string' }, { bool: true }))
+
+      validate.bool = true
+      assert(validate('asdf', { type: 'string' }))
+      assert(!validate(33, { type: 'string' }))
+      validate.bool = false
     })
 
     it('off', () => {
