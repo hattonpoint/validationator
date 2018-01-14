@@ -1,11 +1,7 @@
 TODO:
-- Add ability to function scope option set validate.bool = true
 - Add various differnt validation types
-- Add ability to extend validations
-- Refactor
 - Speed optimizations
 - Finish NPM pipeline
-- validation to passthrough value
 
 WARNING: This is a brand package that probably still has some bugs.
 

@@ -32,7 +32,7 @@ const validate = (value, validation, options = {}) => {
   }
 
   try {
-    if (shouldBypassValidation()) return
+    if (shouldBypassValidation()) return value
     if (Array.isArray(validation)) { runOrValidation(name) } else {
       // Check for missing value and run required checks
       if (!value && !isAcceptedNull(value)) {
@@ -62,10 +62,12 @@ const validate = (value, validation, options = {}) => {
       }
 
       if (BOOL) return true
+      else return value
     }
   } catch (err) {
     if (WARN) {
       console.warn(err)
+      return value
     } else if (BOOL) {
       return false
     } else {

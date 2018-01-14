@@ -342,12 +342,12 @@ describe('validate.js tests', () => {
     })
 
     it('off', () => {
-      assert(validate(33, { type: 'string' }, { off: true }) === undefined)
+      assert(validate(33, { type: 'string' }, { off: true }) === 33)
     })
 
     it('warn', () => {
       console.log('NOTE: This will print an error to the console while testing. That is expected.')
-      assert(validate(33, { type: 'string' }, { warn: true }) === undefined)
+      assert(validate(33, { type: 'string' }, { warn: true }) === 33)
     })
   })
 })
