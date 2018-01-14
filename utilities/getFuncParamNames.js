@@ -1,1 +1,0 @@
-'use strict';module.exports=function(a){var b=/(\/\/.*$)|(\/\*[\s\S]*?\*\/)|(\s*=[^,)]*(('(?:\\'|[^'\r\n])*')|("(?:\\"|[^"\r\n])*"))|(\s*=[^,)]*))/mg,c=/([^\s,]+)/g,d=a.toString().replace(b,''),e=d.slice(d.indexOf('(')+1,d.indexOf(')')).match(c);return'{'===e[0]&&e['}'===e.length-1]&&(e=e.slice(1,-1)),null===e&&(e=[]),e};

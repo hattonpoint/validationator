@@ -1,3 +1,12 @@
+TODO:
+- Add ability to function scope option set validate.bool = true
+- Add various differnt validation types
+- Add ability to extend validations
+- Refactor
+- Speed optimizations
+- Finish NPM pipeline
+- validation to passthrough value
+
 WARNING: This is a brand package that probably still has some bugs.
 
 validationator is a flexible and powerful javascript data validation library. validationator is split into two major functions; validate and validateFunc. validate is the core of the library allowing you to validate simple and complex data structures in various ways by creating a model of the data structure. validateFunc allows you to add an inputModel and/or outputModel to a function to make it statically typed.

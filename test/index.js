@@ -1,41 +1,41 @@
-const readline = require('readline')
+// const readline = require('readline')
 const assert = require('chai').assert
-let validateFunc
-let validate
+const validate = require('../src').validate
+const validateFunc = require('../src').validateFunc
 
-describe('SETUP', () => {
-  it('passes setup', next => {
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout
-    })
+// describe('SETUP', () => {
+//   it('passes setup', next => {
+//     const rl = readline.createInterface({
+//       input: process.stdin,
+//       output: process.stdout
+//     })
 
-    rl.question(`
-Please specify and environment:
+//     rl.question(`
+// Please specify and environment:
 
-  a - src
-  b - dist
-  c - package
+//   a - src
+//   b - dist
+//   c - package
 
-`, res => {
-        if (res.toLowerCase() === 'a') {
-          validate = require('../src').validate
-          validateFunc = require('../src').validateFunc
-        } else if (res.toLowerCase() === 'b') {
-          validate = require('../dist').validate
-          validateFunc = require('../dist').validateFunc
-        } else if (res.toLowerCase() === 'c') {
-          validate = require('validationator').validate
-          validateFunc = require('validationator').validateFunc
-        } else {
-          throw new Error('that did not match any of the options!')
-        }
+// `, res => {
+//         if (res.toLowerCase() === 'a') {
+//           validate = require('../src').validate
+//           validateFunc = require('../src').validateFunc
+//         } else if (res.toLowerCase() === 'b') {
+//           validate = require('../dist').validate
+//           validateFunc = require('../dist').validateFunc
+//         } else if (res.toLowerCase() === 'c') {
+//           validate = require('validationator').validate
+//           validateFunc = require('validationator').validateFunc
+//         } else {
+//           throw new Error('that did not match any of the options!')
+//         }
 
-        rl.close()
-        next()
-      })
-  }).timeout(30 * 1000)
-})
+//         rl.close()
+//         next()
+//       })
+//   }).timeout(30 * 1000)
+// })
 
 describe('validate.js tests', () => {
   context('STRING', () => {
@@ -243,6 +243,22 @@ describe('validate.js tests', () => {
     it('type', () => {
       validate('user@company.com', { type: 'email' })
       assert.throws(() => validate('usercompany.com', { type: 'email' }))
+    })
+  })
+
+  context('validate.extensions', () => {
+    it('should validate the company email', () => {
+      validate.extensions = [
+        {
+          type: 'company-email',
+          rules: value => {
+            if (!value.includes('company')) throw new Error('that is not a company email')
+          }
+        }
+      ]
+
+      validate('user@company.com', { type: 'company-email' })
+      assert.throws(() => validate('user@competitor.com', { type: 'company-email' }))
     })
   })
 
