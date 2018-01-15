@@ -66,6 +66,16 @@ describe('validate.js tests', () => {
       assert.throws(() => validate('sampleEmailemail.com', { type: 'string', regEx: emailRegEx }))
     })
 
+    it('includes', () => {
+      validate('this is a test', { type: 'string', includes: 'test' })
+      assert.throws(() => validate('this is for real!', { type: 'string', includes: 'test' }))
+    })
+
+    it('notIncludes', () => {
+      validate('her name was Mary', { type: 'string', notIncludes: 'undefined' })
+      assert.throws(() => validate('her name was undefined', { type: 'string', notIncludes: 'undefined' }))
+    })
+
     it('all', () => {
       validate('testall@email.com', {
         type: 'string',

@@ -54,11 +54,13 @@ module.exports = [
   }, {
     type: 'string',
     rules: (value, validation, name) => {
-      const { maxLength, minLength, regEx } = validation
+      const { maxLength, minLength, regEx, includes, notIncludes } = validation
       if (typeof value !== 'string') throw new Error(`Expected ${name} to be type string. Got ${typeof value}`)
       if (typeof minLength === 'undefined' ? false : value.length < minLength) throw new Error(`String length is less than minimum`)
       if (typeof maxLength === 'undefined' ? false : value.length > maxLength) throw new Error(`String length is more than maximum`)
       if (typeof regEx === 'undefined' ? false : !regEx.test(value)) throw new Error(`String does not match the validation regEx.`)
+      if (typeof includes === 'undefined' ? false : !value.includes(includes)) throw new Error(`String ${name} does not include required string: ${includes}`)
+      if (typeof notIncludes === 'undefined' ? false : value.includes(notIncludes)) throw new Error(`String ${name} includes blacklisted string: ${notIncludes}`)
     }
   }, {
     type: 'number',

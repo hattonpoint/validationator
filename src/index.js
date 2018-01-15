@@ -1,7 +1,3 @@
-// TODO: Add options for checking different case styles
-// TODO: Options to recreate password validation. Use at least once etc
-// TODO: Add shorthand for type only check support for validateFunc
-
 (function () {
   // Establish the root object, `window` in the browser, or `global` on the server.
   var root = this

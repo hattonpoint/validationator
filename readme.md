@@ -1,9 +1,23 @@
 TODO:
 - Add various differnt validation types
-- Speed optimizations
+- Conduct browser testing
+- Options to recreate password validation. Use at least once etc
+- Add options for checking different case styles
+- Conduct performance tests
+- Debug es2015 preset not transpling foreach into for loops
+- Example use with bootstrap
+- Example using validation on frontend and node
 - Finish NPM pipeline
+- Documentation
+  - validate.extensions
+  - function level options
+  - return value
+  - more examples
+  - class validation
+  - use with react
+  - use in testing
 
-WARNING: This is a brand package that probably still has some bugs.
+WARNING: This is a brand new package that probably still has some bugs. Features and the api may change on our way to v2.
 
 validationator is a flexible and powerful javascript data validation library. validationator is split into two major functions; validate and validateFunc. validate is the core of the library allowing you to validate simple and complex data structures in various ways by creating a model of the data structure. validateFunc allows you to add an inputModel and/or outputModel to a function to make it statically typed.
 
