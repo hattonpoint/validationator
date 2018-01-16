@@ -49,11 +49,6 @@ const validations = [
       if (children) {
         if (typeof children !== 'object' || Array.isArray(children)) throw new Error(`Expected ${name} validation children to be type object. Got ${typeof value} Array.isArray? ${Array.isArray(value)}`)
         const modelKeys = Object.keys(children)
-        if (modelKeys.length !== valueKeys.length) throw new Error(`keys and validation model for ${name} are out of sync. Did you mean to use allChildren? There are ${modelKeys.length} entries to the inputModel and ${valueKeys.length} paramerters.`)
-
-        valueKeys.forEach(valueKey => {
-          if (!matchesAny(valueKey, modelKeys)) throw new Error(`The valueKey '${valueKey}' has not been included ${name} children`)
-        })
 
         modelKeys.forEach(modelKey => {
           validate(value[modelKey], children[modelKey], modelKey)

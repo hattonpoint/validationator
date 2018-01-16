@@ -293,7 +293,6 @@ describe('validate.js tests', () => {
     it('children', () => {
       validate({ key1: 'a', key2: 2 }, { type: 'object',
         children: {
-          key1: { type: 'string' },
           key2: { type: 'number' }
         }
       })
