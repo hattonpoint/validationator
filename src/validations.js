@@ -1,5 +1,4 @@
 const validate = require('./validate')
-const matchesAny = require('./utilities/matchesAny')
 const { includesAny: includesAnyTest } = require('ians-utils')
 
 const validations = [
@@ -63,10 +62,10 @@ const validations = [
       if (typeof minLength !== 'undefined' && value.length < minLength) throw new Error(`String length is less than minimum`)
       if (typeof maxLength !== 'undefined' && value.length > maxLength) throw new Error(`String length is more than maximum`)
       if (typeof regEx !== 'undefined' && !regEx.test(value)) throw new Error(`String does not match the validation regEx.`)
-      if (typeof includes !== 'undefined' && !value.includes(includes)) throw new Error(`String ${name} does not include required string: ${includes}`)
-      if (typeof notIncludes !== 'undefined' && value.includes(notIncludes)) throw new Error(`String ${name} includes blacklisted string: ${notIncludes}`)
-      if (typeof includesAny !== 'undefined' && !includesAnyTest(value, includesAny)) throw new Error(`String ${name} does not include required string: ${includesAny}`)
-      if (typeof notIncludesAny !== 'undefined' && includesAnyTest(value, notIncludesAny)) throw new Error(`String ${name} includes blacklisted string: ${notIncludesAny}`)
+      if (typeof includes !== 'undefined' && !value.includes(includes)) throw new Error(`String "${name || value}" does not include required string: ${includes}`)
+      if (typeof notIncludes !== 'undefined' && value.includes(notIncludes)) throw new Error(`String "${name || value}" includes blacklisted string: ${notIncludes}`)
+      if (typeof includesAny !== 'undefined' && !includesAnyTest(value, includesAny)) throw new Error(`String "${name || value}" does not include required string: [${includesAny}]`)
+      if (typeof notIncludesAny !== 'undefined' && includesAnyTest(value, notIncludesAny)) throw new Error(`String "${name || value}" includes a blacklisted string: [${notIncludesAny}]`)
     }
   }, {
     type: 'number',
