@@ -176,6 +176,16 @@ describe('validate.js tests', () => {
       assert.throws(() => validate([1], { type: 'array', minLength: 3 }))
     })
 
+    it('includes', () => {
+      validate(['test'], { type: 'array', includes: 'test' })
+      assert.throws(() => validate(['toast'], { type: 'array', includes: 'test' }))
+    })
+
+    it('notIncludes', () => {
+      validate(['toast'], { type: 'array', notIncludes: 'test' })
+      assert.throws(() => validate(['test'], { type: 'array', notIncludes: 'test' }))
+    })
+
     it('allChildren', () => {
       validate(['asdf', 'asdf'], { type: 'array', allChildren: { type: 'string' } })
       assert.throws(() => validate(['asdf', 2], { type: 'array', allChildren: { type: 'string' } }))
@@ -226,6 +236,21 @@ describe('validate.js tests', () => {
     it('maxLength', () => {
       validate({ a: 1 }, { type: 'object', maxLength: 1 })
       assert.throws(() => validate({ a: 1, b: 2 }, { type: 'object', maxLength: 1 }))
+    })
+
+    it('includes', () => {
+      validate({ key: 'test' }, { type: 'object', includes: 'test' })
+      assert.throws(() => validate({ key: 'toast' }, { type: 'object', includes: 'test' }))
+    })
+
+    it('includes', () => {
+      validate({ key: [ 'test' ] }, { type: 'object', includes: ['test'] })
+      assert.throws(() => validate({ key: ['toast'] }, { type: 'object', includes: ['test'] }))
+    })
+
+    it('notIncludes', () => {
+      validate({ toast: 'toast' }, { type: 'object', notIncludes: 'test' })
+      assert.throws(() => validate({ test: 'test' }, { type: 'object', notIncludes: 'test' }))
     })
 
     it('allChildren', () => {

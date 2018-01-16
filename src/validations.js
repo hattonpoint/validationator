@@ -5,10 +5,12 @@ module.exports = [
   {
     type: 'array',
     rules: (value, validation, name) => {
-      const { maxLength, minLength, allChildren, children } = validation
+      const { maxLength, minLength, allChildren, children, includes, notIncludes } = validation
       if (!Array.isArray(value)) throw new Error(`Expected ${name} to be type array. Got ${typeof value}`)
       if (typeof minLength === 'undefined' ? false : value.length < minLength) throw new Error(`Array length is less than minimum`)
       if (typeof maxLength === 'undefined' ? false : value.length > maxLength) throw new Error(`Array length is more than maximum`)
+      if (typeof includes === 'undefined' ? false : !JSON.stringify(value).includes(includes)) throw new Error(`Array ${name} does not include required string: ${includes}`)
+      if (typeof notIncludes === 'undefined' ? false : JSON.stringify(value).includes(notIncludes)) throw new Error(`Array ${name} includes blacklisted string: ${notIncludes}`)
       if (allChildren) value.forEach((item, i) => validate(value[i], allChildren, { name: i }))
       if (children) {
         if (children.length !== value.length) throw new Error(`validation and array for ${name} are out of sync.`)
@@ -26,7 +28,7 @@ module.exports = [
   }, {
     type: 'object',
     rules: (value, validation, name) => {
-      const { requiredKeys, children, minLength, maxLength, allChildren } = validation
+      const { requiredKeys, children, minLength, maxLength, allChildren, includes, notIncludes } = validation
       const valueKeys = Object.keys(value)
       if (typeof value !== 'object' || Array.isArray(value)) throw new Error(`Expected ${name} to be type object. Got ${typeof value} Array.isArray? ${Array.isArray(value)}`)
       if (requiredKeys) {
@@ -34,6 +36,8 @@ module.exports = [
           if (!valueKeys.find(valueKey => valueKey === requiredKey)) throw new Error(`Missing required key: ${requiredKey}`)
         })
       }
+      if (typeof includes === 'undefined' ? false : !JSON.stringify(value).includes(JSON.stringify(includes))) throw new Error(`Object ${name} does not include required string: ${includes}`)
+      if (typeof notIncludes === 'undefined' ? false : JSON.stringify(value).includes(JSON.stringify(notIncludes))) throw new Error(`Object ${name} includes blacklisted string: ${notIncludes}`)
       if (typeof minLength === 'undefined' ? false : valueKeys.length < minLength) throw new Error(`Object length is less than minimum`)
       if (typeof maxLength === 'undefined' ? false : valueKeys.length > maxLength) throw new Error(`Object length is more than maximum`)
       if (allChildren) valueKeys.forEach(valueKey => validate(value[valueKey], allChildren, { name: valueKey }))
