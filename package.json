@@ -2,7 +2,7 @@
   "name": "validationator",
   "version": "1.0.7",
   "description": "A versitile data validator and static type checker. Creat complex models for deeply nested data structures. Create statically typed functions. Switch to bool mode of use in form validation.",
-  "main": "src/index.js",
+  "main": "index.js",
   "directories": {
     "test": "test"
   },
@@ -46,6 +46,7 @@
     "mocha": "^4.1.0"
   },
   "dependencies": {
+    "ians-utils": "^1.0.0",
     "validationator": "^1.0.7"
   }
 }

@@ -71,6 +71,16 @@ describe('validate.js tests', () => {
       assert.throws(() => validate('this is for real!', { type: 'string', includes: 'test' }))
     })
 
+    it('includesAny', () => {
+      validate('I love toast', { type: 'string', includesAny: [ 'test', 'toast' ] })
+      assert.throws(() => validate('I love bananas', { type: 'string', includesAny: [ 'test', 'toast' ] }))
+    })
+
+    it('notIncludesAny', () => {
+      validate('contact is at company because apples', { type: 'string', notIncludesAny: [ 'erin', 'abc corp', 'undefined' ] })
+      assert.throws(() => validate('erin is at abc corp because undefined', { type: 'string', notIncludesAny: [ 'erin', 'abc corp', 'undefined' ] }))
+    })
+
     it('notIncludes', () => {
       validate('her name was Mary', { type: 'string', notIncludes: 'undefined' })
       assert.throws(() => validate('her name was undefined', { type: 'string', notIncludes: 'undefined' }))
@@ -181,6 +191,18 @@ describe('validate.js tests', () => {
       assert.throws(() => validate(['toast'], { type: 'array', includes: 'test' }))
     })
 
+    it('includesAny', () => {
+      validate(['fruit', 'banana', 'ebola'], { type: 'array', includesAny: [ 'ebola', 'bad juju' ] })
+      assert.throws(() => validate(['fruit', 'banana'], { type: 'array', includesAny: [ 'ebola', 'bad juju' ] }))
+      validate(['fruit', 'banana', { 'ebola': true }], { type: 'array', includesAny: [ { 'ebola': true }, 'bad juju' ] })
+      assert.throws(() => validate(['fruit', 'banana'], { type: 'array', includesAny: [ 'ebola', 'bad juju' ] }))
+    })
+
+    it('notIncludesAny', () => {
+      validate(['fruit', 'banana', 'orange'], { type: 'array', notIncludesAny: [ 'ebola', 'bad juju' ] })
+      assert.throws(() => validate(['fruit', 'banana', 'ebola'], { type: 'array', notIncludesAny: [ 'ebola', 'bad juju' ] }))
+    })
+
     it('notIncludes', () => {
       validate(['toast'], { type: 'array', notIncludes: 'test' })
       assert.throws(() => validate(['test'], { type: 'array', notIncludes: 'test' }))
@@ -217,7 +239,7 @@ describe('validate.js tests', () => {
     })
   })
 
-  context('object', () => {
+  context('OBJECT', () => {
     it('type', () => {
       validate({}, { type: 'object' })
       assert.throws(() => validate([], { type: 'object' }))
@@ -251,6 +273,16 @@ describe('validate.js tests', () => {
     it('notIncludes', () => {
       validate({ toast: 'toast' }, { type: 'object', notIncludes: 'test' })
       assert.throws(() => validate({ test: 'test' }, { type: 'object', notIncludes: 'test' }))
+    })
+
+    it('includesAny', () => {
+      validate({ a: 'test' }, { type: 'object', includesAny: [ 'test', 'undefined' ] })
+      assert.throws(() => validate({ a: 'toast' }, { type: 'object', includesAny: [ 'test', 'undefined' ] }))
+    })
+
+    it('notIncludesAny', () => {
+      validate({ a: 'toast' }, { type: 'object', notIncludesAny: [ 'test', 'undefined' ] })
+      assert.throws(() => validate({ a: 'undefined' }, { type: 'object', notIncludesAny: [ 'test', 'undefined' ] }))
     })
 
     it('allChildren', () => {
