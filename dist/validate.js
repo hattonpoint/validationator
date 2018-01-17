@@ -1,1 +1,87 @@
-"use strict";var _typeof="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(a){return typeof a}:function(a){return a&&"function"==typeof Symbol&&a.constructor===Symbol&&a!==Symbol.prototype?"symbol":typeof a},matchesAny=require("./utilities/matchesAny"),validate=function a(b,c){var d=2<arguments.length&&arguments[2]!==void 0?arguments[2]:{};try{if(("production"===process.env.NODE_ENV||d.off)&&(!d.on||!d.bool))return;var e=d.name||"";if(Array.isArray(c)){var f=0,g=[];if(c.forEach(function(c){g.push(c.type);try{a(b,c,{name:e})}catch(a){f++}}),f===g.length)throw new Error(e+" did not match any of the types: "+g.toString())}else{var h=function(a){var b=!1;return c.acceptedNulls&&c.acceptedNulls.forEach(function(c){c===a&&(b=!0)}),b};if(!b&&!h(b)){if(c.notRequired)return!!d.bool||void 0;if(d.bool)return!1;throw new Error("Argument '"+e+"' is required!")}if("string"==typeof c&&(c={type:c}),!c.type)throw new Error(e+".type is required");switch(c.extend&&c.extend(b,c,e,d),c.type.toLowerCase()){case"function":if("function"!=typeof b)throw new Error("Expected "+e+" to be type function. Got "+("undefined"==typeof b?"undefined":_typeof(b)));break;case"object":{var i=c,j=i.requiredKeys,k=i.children,l=i.minLength,m=i.maxLength,n=i.allChildren,o=Object.keys(b);if("object"!==("undefined"==typeof b?"undefined":_typeof(b))||Array.isArray(b))throw new Error("Expected "+e+" to be type object. Got "+("undefined"==typeof b?"undefined":_typeof(b))+" Array.isArray? "+Array.isArray(b));if(j&&j.forEach(function(a){if(!o.find(function(b){return b===a}))throw new Error("Missing required key: "+a)}),"undefined"!=typeof l&&o.length<l)throw new Error("Object length is less than minimum");if("undefined"!=typeof m&&o.length>m)throw new Error("Object length is more than maximum");if(n&&o.forEach(function(c){return a(b[c],n,{name:c})}),k){if("object"!==("undefined"==typeof k?"undefined":_typeof(k))||Array.isArray(k))throw new Error("Expected "+e+" validation children to be type object. Got "+("undefined"==typeof b?"undefined":_typeof(b))+" Array.isArray? "+Array.isArray(b));var p=Object.keys(k);if(p.length!==o.length)throw new Error("keys and validation model for "+e+" are out of sync. Did you mean to use allChildren? There are "+p.length+" entries to the inputModel and "+o.length+" paramerters.");o.forEach(function(a){if(!matchesAny(a,p))throw new Error("The valueKey '"+a+"' has not been included "+e+" children")}),p.forEach(function(c){a(b[c],k[c],c)})}}break;case"array":{var q=c,r=q.maxLength,s=q.minLength,t=q.allChildren,u=q.children;if(!Array.isArray(b))throw new Error("Expected "+e+" to be type array. Got "+("undefined"==typeof b?"undefined":_typeof(b)));if("undefined"!=typeof s&&b.length<s)throw new Error("Array length is less than minimum");if("undefined"!=typeof r&&b.length>r)throw new Error("Array length is more than maximum");if(t&&b.forEach(function(c,d){return a(b[d],t,{name:d})}),u){if(u.length!==b.length)throw new Error("validation and array for "+e+" are out of sync.");if(!Array.isArray(u))throw new Error(e+".children must be an array.");u.forEach(function(c,d){a(b[d],c,{name:d})})}}break;case"string":{var v=c,w=v.maxLength,x=v.minLength,y=v.regEx;if("string"!=typeof b)throw new Error("Expected "+e+" to be type string. Got "+("undefined"==typeof b?"undefined":_typeof(b)));if("undefined"!=typeof x&&b.length<x)throw new Error("String length is less than minimum");if("undefined"!=typeof w&&b.length>w)throw new Error("String length is more than maximum");if("undefined"!=typeof y&&!y.test(b))throw new Error("String does not match the validation regEx.")}break;case"number":{var z=c,A=z.max,B=z.min,C=z.decimals,D=z.regEx;if("number"!=typeof b)throw new Error("Expected "+e+" to be type number. Got "+("undefined"==typeof b?"undefined":_typeof(b)));if("undefined"!=typeof B&&b<B)throw new Error("Number is less than minimum");if("undefined"!=typeof A&&b>A)throw new Error("Number is more than maximum");if("undefined"!=typeof C&&function(){var a=b.toString().split(".");if(a[1])return a[1].length>C}())throw new Error("Number: "+b+" has more than "+C+" decimails.");if("undefined"!=typeof D&&!D.test(b))throw new Error("String does not match the validation regEx.")}break;case"boolean":if("boolean"!=typeof b)throw new Error("Expected "+e+" to be type boolean. Got "+("undefined"==typeof b?"undefined":_typeof(b)));break;case"email":a(b,{type:"string",maxLength:50,regEx:/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/},{name:e});break;default:throw new Error("unkown validation type: "+c.type);}if(d.bool)return!0}}catch(a){if(d.warn)console.warn(a);else{if(d.bool)return!1;throw a}}};module.exports=validate;
+'use strict';
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+var validate = function validate(value, validation) {
+  var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+  var name = options.name || '';
+  var ON = options.on || validate.on;
+  var OFF = options.off || validate.off;
+  var WARN = options.warn || validate.warn;
+  var BOOL = options.bool || validate.bool;
+
+  var shouldBypassValidation = function shouldBypassValidation() {
+    return (process.env.NODE_ENV === 'production' || OFF) && (!ON || !BOOL);
+  };
+
+  var runOrValidation = function runOrValidation(name) {
+    var failedCount = 0;
+    var validationOptions = [];
+    validation.forEach(function (option) {
+      validationOptions.push(option.type);
+      try {
+        validate(value, option, { name: name });
+      } catch (err) {
+        failedCount++;
+      }
+    });
+    if (failedCount === validationOptions.length) throw new Error(name + ': ' + value + ' did not match any of the types: ' + validationOptions.toString());
+  };
+
+  var isAcceptedNull = function isAcceptedNull(value) {
+    var returnVal = false;
+    if (validation.acceptedNulls) {
+      validation.acceptedNulls.forEach(function (nullVal) {
+        if (nullVal === value) returnVal = true;
+      });
+    }
+    return returnVal;
+  };
+
+  try {
+    if (shouldBypassValidation()) return value;
+    if (Array.isArray(validation)) {
+      runOrValidation(name);
+    } else {
+      // Check for missing value and run required checks
+      if (!value && !isAcceptedNull(value)) {
+        if (validation.notRequired) {
+          if (BOOL) return true;else return;
+        } else {
+          if (BOOL) return false;else throw new Error('Value \'' + name + ': ' + value + '\' is required!');
+        }
+      }
+
+      // Enable shorthand type
+      if (typeof validation === 'string') validation = { type: validation };
+      if (!validation.type) throw new Error(name + ': ' + value + '.type is required');
+      if (validation.extend) validation.extend(value, validation, name, options);
+
+      if (validate.extensions) validations = [].concat(_toConsumableArray(validations), _toConsumableArray(validate.extensions));
+
+      for (var i = 0; i < validations.length; i++) {
+        var currentValidation = validations[i];
+        if (validation.type.toLowerCase() === currentValidation.type) {
+          currentValidation.rules(value, validation, name);
+          break;
+        }
+      }
+
+      if (BOOL) return true;else return value;
+    }
+  } catch (err) {
+    if (WARN) {
+      console.warn(err);
+      return value;
+    } else if (BOOL) {
+      return false;
+    } else {
+      throw err;
+    }
+  }
+};
+
+// exports must be listed above validations require to avoid circular reference bug
+module.exports = validate;
+var validations = require('./validations');

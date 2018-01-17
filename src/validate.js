@@ -1,9 +1,9 @@
-const validate = (value, validation, options = {}) => {
-  const name = options.name || ''
-  const ON = (options.on || validate.on)
-  const OFF = (options.off || validate.off)
-  const WARN = (options.warn || validate.warn)
-  const BOOL = (options.bool || validate.bool)
+const validate = (value, validation) => {
+  const name = validation.name || ''
+  const ON = (validation.on || validate.on)
+  const OFF = (validation.off || validate.off)
+  const WARN = (validation.warn || validate.warn)
+  const BOOL = (validation.bool || validate.bool)
 
   const shouldBypassValidation = () => (process.env.NODE_ENV === 'production' || OFF) && (!ON || !BOOL)
 

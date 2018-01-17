@@ -1,1 +1,91 @@
-"use strict";var _typeof="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(a){return typeof a}:function(a){return a&&"function"==typeof Symbol&&a.constructor===Symbol&&a!==Symbol.prototype?"symbol":typeof a};function _toConsumableArray(a){if(Array.isArray(a)){for(var b=0,c=Array(a.length);b<a.length;b++)c[b]=a[b];return c}return Array.from(a)}var getFuncParamNames=require("./utilities/getFuncParamNames"),matchesAny=require("./utilities/matchesAny"),validate=require("./validate");module.exports=function(a,b){var c=2<arguments.length&&arguments[2]!==void 0?arguments[2]:{};try{var d=c.name||a.name;if(b=Array.isArray(b)?b:[b],("production"===process.env.NODE_ENV||c.off)&&!c.on)return a.apply(void 0,_toConsumableArray(b));var e=a.inputModel,f=a.outputModel;if(!a)throw new Error("Missing required argument func");if("function"!=typeof a)throw new Error("First argument is not a function!");if(!e&&!f)throw new Error("ERROR: No validation props set for "+d+". Please specify "+d+".inputModel or "+d+".outputModel");e&&!f&&validateInput(b,e,a,d),f&&!e&&validate(a.apply(void 0,_toConsumableArray(b)),f,{name:d}),e&&f&&(validateInput(b,e,a,d),validate(a.apply(void 0,_toConsumableArray(b)),f,{name:d}))}catch(d){if(c.warn)return console.warn(d),a.apply(void 0,_toConsumableArray(b));throw d}return a.apply(void 0,_toConsumableArray(b))};var validateInput=function(a,b,c,d){var e=getFuncParamNames(c);if("string"==typeof b.type){if(1<a.length)throw new Error("ERROR: "+d+" expected 1 parameter but received "+a.length);return void validate(a[0],b,{name:e[0]})}if(Array.isArray(b)){if(b.length!==e.length)throw new Error("ERROR: parameters and input model for "+d+" are out of sync. There are "+b.length+" entries to the inputModel and "+e.length+" paramerters.");if(!Array.isArray(a))throw new Error("ERROR: Multiple params must me passed into validateFunc as an array.");return void b.forEach(function(b,c){validate(a[c],b,{name:e[c]})})}if("object"===("undefined"==typeof b?"undefined":_typeof(b))){if(a=a[0],"object"!==("undefined"==typeof a?"undefined":_typeof(a))||Array.isArray(a))throw new Error("Error: Expected a single object as the sole function param (ES6 parameter destructuring).");var f=Object.keys(b),g=Object.keys(a);if(f.length!==g.length)throw new Error("ERROR: parameters and input model for "+d+" are out of sync. There are "+f.length+" entries to the inputModel and "+g.length+" paramerters.");return g.forEach(function(a){if(!matchesAny(a,e))throw new Error("ERROR: The paramKey '"+a+"' does not match any of the available parameters: "+e.toString());if(!matchesAny(a,f))throw new Error("ERROR: The paramKey '"+a+"' has not been included "+d+".inputModel")}),void f.forEach(function(c){validate(a[c],b[c],{name:c})})}throw new Error("UNKNOWN ERROR: the function input model did not match the api spec.")};
+'use strict';
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+var getFuncParamNames = require('./utilities/getFuncParamNames');
+var matchesAny = require('./utilities/matchesAny');
+var validate = require('./validate');
+
+// options: off, warn, on
+module.exports = function (func, params) {
+  var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+  try {
+    var name = options.name || func.name;
+    params = Array.isArray(params) ? params : [params];
+    if ((process.env.NODE_ENV === 'production' || options.off) && !options.on) return func.apply(undefined, _toConsumableArray(params));
+
+    var inputModel = func.inputModel;
+    var outputModel = func.outputModel;
+
+    if (!func) throw new Error('Missing required argument func');
+    if (typeof func !== 'function') throw new Error('First argument is not a function!');
+    if (!inputModel && !outputModel) throw new Error('ERROR: No validation props set for ' + name + '. Please specify ' + name + '.inputModel or ' + name + '.outputModel');
+
+    if (inputModel && !outputModel) {
+      validateInput(params, inputModel, func, name);
+    }
+
+    if (outputModel && !inputModel) {
+      validate(func.apply(undefined, _toConsumableArray(params)), outputModel, { name: name });
+    }
+
+    if (inputModel && outputModel) {
+      validateInput(params, inputModel, func, name);
+      validate(func.apply(undefined, _toConsumableArray(params)), outputModel, { name: name });
+    }
+  } catch (err) {
+    if (options.warn) {
+      console.warn(err);
+      return func.apply(undefined, _toConsumableArray(params));
+    } else {
+      throw err;
+    }
+  }
+
+  return func.apply(undefined, _toConsumableArray(params));
+};
+
+var validateInput = function validateInput(params, inputModel, func, name) {
+  var paramNames = getFuncParamNames(func);
+
+  if (typeof inputModel.type === 'string') {
+    // single parameter
+    if (params.length > 1) throw new Error('ERROR: ' + name + ' expected 1 parameter but received ' + params.length);
+    validate(params[0], inputModel, { name: paramNames[0] });
+    return;
+  }
+
+  if (Array.isArray(inputModel)) {
+    // multiple parameters
+    if (inputModel.length !== paramNames.length) throw new Error('ERROR: parameters and input model for ' + name + ' are out of sync. There are ' + inputModel.length + ' entries to the inputModel and ' + paramNames.length + ' paramerters.');
+    if (!Array.isArray(params)) throw new Error('ERROR: Multiple params must me passed into validateFunc as an array.');
+    inputModel.forEach(function (model, i) {
+      validate(params[i], model, { name: paramNames[i] });
+    });
+    return;
+  }
+
+  if ((typeof inputModel === 'undefined' ? 'undefined' : _typeof(inputModel)) === 'object') {
+    // object deconstruction params
+    params = params[0];
+    if ((typeof params === 'undefined' ? 'undefined' : _typeof(params)) !== 'object' || Array.isArray(params)) throw new Error('Error: Expected a single object as the sole function param (ES6 parameter destructuring).');
+    var modelKeys = Object.keys(inputModel);
+    var paramKeys = Object.keys(params);
+
+    if (modelKeys.length !== paramKeys.length) throw new Error('ERROR: parameters and input model for ' + name + ' are out of sync. There are ' + modelKeys.length + ' entries to the inputModel and ' + paramKeys.length + ' paramerters.');
+
+    paramKeys.forEach(function (paramKey) {
+      if (!matchesAny(paramKey, paramNames)) throw new Error('ERROR: The paramKey \'' + paramKey + '\' does not match any of the available parameters: ' + paramNames.toString());
+      if (!matchesAny(paramKey, modelKeys)) throw new Error('ERROR: The paramKey \'' + paramKey + '\' has not been included ' + name + '.inputModel');
+    });
+
+    modelKeys.forEach(function (modelKey) {
+      validate(params[modelKey], inputModel[modelKey], { name: modelKey });
+    });
+    return;
+  }
+  throw new Error('UNKNOWN ERROR: the function input model did not match the api spec.');
+};

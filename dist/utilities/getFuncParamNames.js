@@ -1,1 +1,11 @@
-'use strict';module.exports=function(a){var b=/(\/\/.*$)|(\/\*[\s\S]*?\*\/)|(\s*=[^,)]*(('(?:\\'|[^'\r\n])*')|("(?:\\"|[^"\r\n])*"))|(\s*=[^,)]*))/mg,c=/([^\s,]+)/g,d=a.toString().replace(b,''),e=d.slice(d.indexOf('(')+1,d.indexOf(')')).match(c);return'{'===e[0]&&e['}'===e.length-1]&&(e=e.slice(1,-1)),null===e&&(e=[]),e};
+'use strict';
+
+module.exports = function (func) {
+  var STRIP_COMMENTS_DEFAULTS = /(\/\/.*$)|(\/\*[\s\S]*?\*\/)|(\s*=[^,)]*(('(?:\\'|[^'\r\n])*')|("(?:\\"|[^"\r\n])*"))|(\s*=[^,)]*))/mg;
+  var ARGUMENT_NAMES = /([^\s,]+)/g;
+  var fnStr = func.toString().replace(STRIP_COMMENTS_DEFAULTS, '');
+  var result = fnStr.slice(fnStr.indexOf('(') + 1, fnStr.indexOf(')')).match(ARGUMENT_NAMES);
+  if (result[0] === '{' && result[result.length - 1 === '}']) result = result.slice(1, -1);
+  if (result === null) result = [];
+  return result;
+};

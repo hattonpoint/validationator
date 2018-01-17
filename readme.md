@@ -1,12 +1,12 @@
 TODO:
+- Move options to validation options so that they can be chosen on a case by case basis
+- Allow bool and warn to overlap
 - Add various differnt validation types
-- Conduct browser testing
+- Add options for checking different case styles (string)
+- add includesAll and notIncludesAll
 - Options to recreate password validation. Use at least once etc
-- Add options for checking different case styles
+- Conduct browser testing
 - Conduct performance tests
-- Debug es2015 preset not transpling foreach into for loops
-- Example use with bootstrap
-- Example using validation on frontend and node
 - Finish NPM pipeline
 - Documentation
   - validate.extensions
@@ -16,6 +16,8 @@ TODO:
   - class validation
   - use with react
   - use in testing
+  - use with node
+  - use with bootstrap validation
 
 WARNING: This is a brand new package that probably still has some bugs. Features and the api may change on our way to v2.
 
