@@ -51,14 +51,14 @@ describe('validate.js tests', () => {
       assert.throws(() => validate('test string', 'array'))
     })
 
-    it('maxLength', () => {
-      validate('test string', { type: 'string', maxLength: 50 })
-      assert.throws(() => validate('test string', { type: 'string', maxLength: 5 }))
+    it('maxLen', () => {
+      validate('test string', { type: 'string', maxLen: 50 })
+      assert.throws(() => validate('test string', { type: 'string', maxLen: 5 }))
     })
 
-    it('minLength', () => {
-      validate('test string', { type: 'string', minLength: 5 })
-      assert.throws(() => validate('test string', { type: 'string', minLength: 50 }))
+    it('minLen', () => {
+      validate('test string', { type: 'string', minLen: 5 })
+      assert.throws(() => validate('test string', { type: 'string', minLen: 50 }))
     })
 
     it('regEx', () => {
@@ -89,16 +89,16 @@ describe('validate.js tests', () => {
     it('all', () => {
       validate('testall@email.com', {
         type: 'string',
-        minLength: 3,
-        maxLength: 50,
+        minLen: 3,
+        maxLen: 50,
         regEx: emailRegEx
       })
 
       assert.throws(() => {
         validate('testall@emaiom', {
           type: 'string',
-          minLength: 3,
-          maxLength: 50,
+          minLen: 3,
+          maxLen: 50,
           regEx: emailRegEx
         })
       })
@@ -106,13 +106,13 @@ describe('validate.js tests', () => {
 
     it('or', () => {
       validate('test@gmail.com', [
-        { type: 'string', maxLength: 4 },
+        { type: 'string', maxLen: 4 },
         { type: 'string', regEx: emailRegEx }
       ])
 
       assert.throws(() => {
         validate('testgmail.com', [
-          { type: 'string', maxLength: 4 },
+          { type: 'string', maxLen: 4 },
           { type: 'string', regEx: emailRegEx }
         ])
       })
@@ -176,14 +176,14 @@ describe('validate.js tests', () => {
       assert.throws(() => validate({}, { type: 'array' }))
     })
 
-    it('maxLength', () => {
-      validate([1, 2, 3], { type: 'array', maxLength: 3 })
-      assert.throws(() => validate([1, 2, 3, 4], { type: 'array', maxLength: 3 }))
+    it('maxLen', () => {
+      validate([1, 2, 3], { type: 'array', maxLen: 3 })
+      assert.throws(() => validate([1, 2, 3, 4], { type: 'array', maxLen: 3 }))
     })
 
-    it('minLength', () => {
-      validate([1, 2, 3], { type: 'array', minLength: 3 })
-      assert.throws(() => validate([1], { type: 'array', minLength: 3 }))
+    it('minLen', () => {
+      validate([1, 2, 3], { type: 'array', minLen: 3 })
+      assert.throws(() => validate([1], { type: 'array', minLen: 3 }))
     })
 
     it('includes', () => {
@@ -250,14 +250,14 @@ describe('validate.js tests', () => {
       assert.throws(() => validate({ test2: 4 }, { type: 'object', requiredKeys: [ 'test' ] }))
     })
 
-    it('minLength', () => {
-      validate({ a: 1, b: 2, c: 3 }, { type: 'object', minLength: 3 })
-      assert.throws(() => validate({ a: 1, b: 2 }, { type: 'object', minLength: 3 }))
+    it('minLen', () => {
+      validate({ a: 1, b: 2, c: 3 }, { type: 'object', minLen: 3 })
+      assert.throws(() => validate({ a: 1, b: 2 }, { type: 'object', minLen: 3 }))
     })
 
-    it('maxLength', () => {
-      validate({ a: 1 }, { type: 'object', maxLength: 1 })
-      assert.throws(() => validate({ a: 1, b: 2 }, { type: 'object', maxLength: 1 }))
+    it('maxLen', () => {
+      validate({ a: 1 }, { type: 'object', maxLen: 1 })
+      assert.throws(() => validate({ a: 1, b: 2 }, { type: 'object', maxLen: 1 }))
     })
 
     it('includes', () => {
@@ -497,7 +497,7 @@ describe('validateFunc.js tests', () => {
 
       testFunc.inputModel = [
         { type: 'number', min: 40 },
-        { type: 'string', maxLength: 1 },
+        { type: 'string', maxLen: 1 },
         { type: 'bool', notRequired: true }
       ]
 

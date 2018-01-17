@@ -18,7 +18,7 @@ const validate = (value, validation, options = {}) => {
         failedCount++
       }
     })
-    if (failedCount === validationOptions.length) throw new Error(`${name} did not match any of the types: ${validationOptions.toString()}`)
+    if (failedCount === validationOptions.length) throw new Error(`${name}: ${value} did not match any of the types: ${validationOptions.toString()}`)
   }
 
   const isAcceptedNull = value => {
@@ -41,16 +41,15 @@ const validate = (value, validation, options = {}) => {
           else return
         } else {
           if (BOOL) return false
-          else throw new Error(`Argument '${name}' is required!`)
+          else throw new Error(`Value '${name}: ${value}' is required!`)
         }
       }
 
       // Enable shorthand type
       if (typeof validation === 'string') validation = { type: validation }
-      if (!validation.type) throw new Error(`${name}.type is required`)
+      if (!validation.type) throw new Error(`${name}: ${value}.type is required`)
       if (validation.extend) validation.extend(value, validation, name, options)
 
-      let validations = require('./validations')
       if (validate.extensions) validations = [ ...validations, ...validate.extensions ]
 
       for (let i = 0; i < validations.length; i++) {
@@ -76,4 +75,6 @@ const validate = (value, validation, options = {}) => {
   }
 }
 
+// exports must be listed above validations require to avoid circular reference bug
 module.exports = validate
+let validations = require('./validations')
