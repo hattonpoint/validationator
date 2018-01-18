@@ -13,7 +13,7 @@ const validate = (value, validation) => {
     validation.forEach(option => {
       validationOptions.push(option.type)
       try {
-        validate(value, option, { name })
+        validate(value, option)
       } catch (err) {
         failedCount++
       }
@@ -40,6 +40,7 @@ const validate = (value, validation) => {
           if (BOOL) return true
           else return
         } else {
+          if (WARN) console.warn(`Value '${name}: ${value}' is required!`)
           if (BOOL) return false
           else throw new Error(`Value '${name}: ${value}' is required!`)
         }
@@ -48,26 +49,26 @@ const validate = (value, validation) => {
       // Enable shorthand type
       if (typeof validation === 'string') validation = { type: validation }
       if (!validation.type) throw new Error(`${name}: ${value}.type is required`)
-      if (validation.extend) validation.extend(value, validation, name, options)
+      if (validation.extend) validation.extend(value, validation)
 
+      let validations = require('./validations')
       if (validate.extensions) validations = [ ...validations, ...validate.extensions ]
 
-      for (let i = 0; i < validations.length; i++) {
-        const currentValidation = validations[i]
+      validations.forEach(currentValidation => {
         if (validation.type.toLowerCase() === currentValidation.type) {
           currentValidation.rules(value, validation, name)
-          break
         }
-      }
+      })
 
       if (BOOL) return true
       else return value
     }
   } catch (err) {
-    if (WARN) {
+    if (WARN && !BOOL) {
       console.warn(err)
       return value
     } else if (BOOL) {
+      if (WARN) console.warn(err)
       return false
     } else {
       throw err
@@ -77,4 +78,3 @@ const validate = (value, validation) => {
 
 // exports must be listed above validations require to avoid circular reference bug
 module.exports = validate
-let validations = require('./validations')

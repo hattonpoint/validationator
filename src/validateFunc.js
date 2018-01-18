@@ -3,7 +3,7 @@ const matchesAny = require('./utilities/matchesAny')
 const validate = require('./validate')
 
 // options: off, warn, on
-module.exports = (func, params, options = {}) => {
+const validateFunc = (func, params, options = {}) => {
   try {
     const name = options.name || func.name
     params = Array.isArray(params) ? params : [ params ]
@@ -43,7 +43,7 @@ module.exports = (func, params, options = {}) => {
 const validateInput = (params, inputModel, func, name) => {
   const paramNames = getFuncParamNames(func)
 
-  if (typeof inputModel.type === 'string') { // single parameter
+  if (typeof inputModel.type === 'string' || typeof inputModel === 'string') { // single parameter
     if (params.length > 1) throw new Error(`ERROR: ${name} expected 1 parameter but received ${params.length}`)
     validate(params[0], inputModel, { name: paramNames[0] })
     return
@@ -78,3 +78,5 @@ const validateInput = (params, inputModel, func, name) => {
   }
   throw new Error(`UNKNOWN ERROR: the function input model did not match the api spec.`)
 }
+
+module.exports = validateFunc

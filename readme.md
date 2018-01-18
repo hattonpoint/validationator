@@ -1,13 +1,11 @@
 TODO:
-- Move options to validation options so that they can be chosen on a case by case basis
-- Allow bool and warn to overlap
 - Add various differnt validation types
 - Add options for checking different case styles (string)
 - add includesAll and notIncludesAll
 - Options to recreate password validation. Use at least once etc
 - Conduct browser testing
 - Conduct performance tests
-- Finish NPM pipeline
+- create a way to add specific validations for performance boost
 - Documentation
   - validate.extensions
   - function level options

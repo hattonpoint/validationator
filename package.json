@@ -1,34 +1,33 @@
 {
   "name": "validationator",
-  "version": "1.0.7",
+  "version": "1.1.9",
   "description": "A versitile data validator and static type checker. Creat complex models for deeply nested data structures. Create statically typed functions. Switch to bool mode of use in form validation.",
   "main": "index.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "test": "./node_modules/mocha/bin/mocha",
+    "test": "./node_modules/mocha/bin/mocha test/src",
+    "test:dist": "./node_modules/mocha/bin/mocha test/dist",
+    "test:prod": "./node_modules/mocha/bin/mocha test/prod",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "build": "babel src --presets es2015 --out-dir dist",
     "minify": "minify dist -d dist",
     "clean": "rm -rf dist",
-    "deploy": "chmod +x ./bin/publish.sh; ./bin/publish.sh" 
+    "publish:start": "chmod +x ./bin/publish-start.sh; ./bin/publish-start.sh",
+    "publish:finish": "chmod +x ./bin/publish-finish.sh; ./bin/publish-finish.sh"
   },
   "repository": "asdf",
   "keywords": [
     "validation",
     "validate",
-    "static",
-    "type",
-    "checker",
+    "type checker",
     "typed",
-    "functions",
-    "deep",
-    "deeply",
+    "typed functions",
+    "deeply nested",
     "nested",
-    "data",
-    "structures"
+    "data structures"
   ],
   "author": "Ian Lancaster",
   "license": "ISC",
@@ -43,10 +42,8 @@
     "eslint-plugin-node": "^5.2.1",
     "eslint-plugin-promise": "^3.6.0",
     "eslint-plugin-standard": "^3.0.1",
-    "mocha": "^4.1.0"
-  },
-  "dependencies": {
-    "ians-utils": "^1.0.0",
-    "validationator": "^1.0.7"
+    "mocha": "^4.1.0",
+    "npm-cli-login": "0.0.10",
+    "validationator": "^1.1.8"
   }
 }
