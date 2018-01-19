@@ -44,6 +44,9 @@
     "eslint-plugin-standard": "^3.0.1",
     "mocha": "^4.1.0",
     "npm-cli-login": "0.0.10",
-    "validationator": "^1.2.1"
+    "validationator": "^1.2.2"
+  },
+  "dependencies": {
+    "validator": "^9.2.0"
   }
 }

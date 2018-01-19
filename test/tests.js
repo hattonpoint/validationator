@@ -276,16 +276,18 @@ module.exports = (validate, validateFunc) => {
       })
     })
 
+    context('ALPHA', () => {
+      validate('asdf', 'alpha')
+      assert.throws(() => validate('dd%%', 'alpha'))
+    })
+
     context('validate.extensions', () => {
       it('should validate the company email', () => {
-        validate.extensions = [
-          {
-            type: 'company-email',
-            rules: value => {
-              if (!value.includes('company')) throw new Error('that is not a company email')
-            }
+        validate.extensions = {
+          'company-email': value => {
+            if (!value.includes('company')) throw new Error('that is not a company email')
           }
-        ]
+        }
 
         validate('user@company.com', 'company-email')
         assert.throws(() => validate('user@competitor.com', 'company-email'))
@@ -485,58 +487,6 @@ module.exports = (validate, validateFunc) => {
 
   describe('fuelsy tests', () => {
     it('should validate the leads even after deploying to npm', () => {
-      validate.extensions = [
-        {
-          type: 'string-int',
-          rules: (value, validation) => {
-            validate(parseInt(value), Object.assign(
-              validation,
-              { type: 'number', name: 'string-int' }
-            ))
-          }
-        }, {
-          type: 'postal-code',
-          rules: value => {
-            validate(value, ['string', 'number'])
-            value = `${value}` // convert to string if not number
-            validate(value, {
-              type: 'string',
-              name: 'postal-code',
-              regEx: /^\d{5}(?:[-\s]\d{4})?$/
-            })
-          }
-        }, {
-          type: 'url',
-          rules: value => {
-            validate(value, {
-              type: 'string',
-              name: 'url',
-              regEx: /^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$/
-            })
-          }
-        }, {
-          type: 'date',
-          rules: value => {
-            validate(value, {
-              type: 'string',
-              name: 'date',
-              regEx: /(0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])[- /.](19|20)[0-9]{2}/
-            })
-          }
-        }, {
-          type: 'phone',
-          rules: value => {
-            validate(value, ['string', 'number'])
-            value = `${value}` // convert to string if not number
-            validate(value, {
-              type: 'string',
-              name: 'phone',
-              regEx: /^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*$/
-            })
-          }
-        }
-      ]
-
       const leadValidationModel = (lead, bool) => ({
         bool,
         type: 'object',

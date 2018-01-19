@@ -1,28 +1,10 @@
-TODO:
-- Add various differnt validation types
-- Add options for checking different case styles (string)
-- add includesAll and notIncludesAll
-- Options to recreate password validation. Use at least once etc
-- Conduct browser testing
-- Conduct performance tests
-- create a way to add specific validations for performance boost
-- Documentation
-  - validate.extensions
-  - function level options
-  - return value
-  - more examples
-  - class validation
-  - use with react
-  - use in testing
-  - use with node
-  - use with bootstrap validation
-
 WARNING: This is a brand new package that probably still has some bugs. Features and the api may change on our way to v2.
 
 validationator is a flexible and powerful javascript data validation library. validationator is split into two major functions; validate and validateFunc. validate is the core of the library allowing you to validate simple and complex data structures in various ways by creating a model of the data structure. validateFunc allows you to add an inputModel and/or outputModel to a function to make it statically typed.
 
 Wait, doesn't flow do this already? Yes, flow does allow for static typing, but it does not allow for nested dataStructures or non-type validation checks. This is also a semi-runtime library where flow is compile-time. I say semi because the library is set to look for a 'production' node environment variable and will to bypass any validation. 
 
+WARNING: Documentation out of date. Updates coming soon.
 
 validate.js
 -----------
