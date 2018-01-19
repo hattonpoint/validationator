@@ -1,1 +1,0 @@
-(function(){var a=this,b={validate:require('./validate'),validateFunc:require('./validateFunc')},c=!1;'undefined'!=typeof module&&module.exports?(module.exports=b,a._=b,c=!0):a._=b})();

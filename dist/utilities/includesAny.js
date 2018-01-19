@@ -1,1 +1,0 @@
-"use strict";var includesAny=function(a,b){var c=2<arguments.length&&arguments[2]!==void 0?arguments[2]:{},d=!1;c.ignoreCase&&(a=a.toLowerCase()),c.stringify&&(a=JSON.stringify(a));for(var e,f=0;f<b.length;f++)if(e=b[f],c.ignoreCase&&(e=e.toLowerCase()),c.stringify&&(e=JSON.stringify(e)),a.includes(e)){d=!0;break}return d};module.exports=includesAny;
