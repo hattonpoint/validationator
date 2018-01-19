@@ -482,4 +482,143 @@ module.exports = (validate, validateFunc) => {
       })
     })
   })
+
+  describe('fuelsy tests', () => {
+    it('should validate the leads even after deploying to npm', () => {
+      validate.extensions = [
+        {
+          type: 'string-int',
+          rules: (value, validation) => {
+            validate(parseInt(value), Object.assign(
+              validation,
+              { type: 'number', name: 'string-int' }
+            ))
+          }
+        }, {
+          type: 'postal-code',
+          rules: value => {
+            validate(value, ['string', 'number'])
+            value = `${value}` // convert to string if not number
+            validate(value, {
+              type: 'string',
+              name: 'postal-code',
+              regEx: /^\d{5}(?:[-\s]\d{4})?$/
+            })
+          }
+        }, {
+          type: 'url',
+          rules: value => {
+            validate(value, {
+              type: 'string',
+              name: 'url',
+              regEx: /^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$/
+            })
+          }
+        }, {
+          type: 'date',
+          rules: value => {
+            validate(value, {
+              type: 'string',
+              name: 'date',
+              regEx: /(0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])[- /.](19|20)[0-9]{2}/
+            })
+          }
+        }, {
+          type: 'phone',
+          rules: value => {
+            validate(value, ['string', 'number'])
+            value = `${value}` // convert to string if not number
+            validate(value, {
+              type: 'string',
+              name: 'phone',
+              regEx: /^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*$/
+            })
+          }
+        }
+      ]
+
+      const leadValidationModel = (lead, bool) => ({
+        bool,
+        type: 'object',
+        notIncludes: 'undefined',
+        requiredKeys: [ 'ContactPosition', 'LeadTitle', 'LeadIndustries',
+          'LeadKeywords', 'Price', 'ContactPhone', 'CompanyName', 'CompanyPostalCode',
+          'CompanyStateProvince', 'ContactFirstName', 'ContactLastName', 'Description',
+          'IntentToPurchase' ],
+        children: {
+          Description: {
+            type: 'string',
+            notIncludesAny: [ lead.CompanyName, lead.ContactFirstName, lead.ContactLastName ]
+          },
+          IntentToPurchase: {
+            type: 'string',
+            includes: true
+          },
+          LeadIndustries: 'string',
+          LeadKeywords: 'string',
+          Price: {
+            type: 'string-int',
+            min: 20,
+            max: 500
+          },
+          ContactFirstName: 'string',
+          ContactLastName: 'string',
+          ContactPosition: 'string',
+          LeadTitle: 'string',
+          CompanyPostalCode: {
+            type: 'postal-code'
+          },
+          CompanyStateProvince: {
+            type: 'string',
+            maxLength: 2,
+            minLength: 2
+          },
+          CompanyCountry: {
+            type: 'string',
+            includes: 'United States'
+          },
+          CompanyRevenue: {
+            type: 'string-int',
+            notRequired: true,
+            min: 10000,
+            max: 1000000000000 // one trillion dollars. Amazon might break this.
+          },
+          EstimatedOpportunityValue: {
+            type: 'string-int',
+            notRequired: true,
+            max: 100000000
+          },
+          ContactEmail: {
+            type: 'email',
+            notRequired: true
+          },
+          CompanyUrl: {
+            type: 'url',
+            notRequired: true
+          },
+          ContactPhone: {
+            type: 'phone'
+          },
+          LeadTiming: {
+            type: 'date',
+            notRequired: true
+          }
+        }
+      })
+
+      // three leads first passes, second fails, third passes
+      const leads = require('./resources/leads')
+
+      validate(leads[0], leadValidationModel(leads[0]))
+
+      assert.throws(() => {
+        leads.forEach(lead => {
+          validate(lead, leadValidationModel(lead))
+        })
+      })
+
+      assert(validate(leads[0], leadValidationModel(leads[0], 'bool')) === true)
+      assert(validate(leads[1], leadValidationModel(leads[1], 'bool')) === false)
+    })
+  })
 }
