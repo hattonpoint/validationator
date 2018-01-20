@@ -50,6 +50,13 @@ module.exports = (validate, validateFunc) => {
         assert.throws(() => validate('her name was undefined', { type: 'string', notIncludes: 'undefined' }))
       })
 
+      let upperCase
+
+      it('upperCase', () => {
+        validate('ASDF', { type: 'string', upperCase })
+        assert.throws(() => validate('adsf', { type: 'string', upperCase }))
+      })
+
       it('all', () => {
         validate('testall@email.com', {
           type: 'string',

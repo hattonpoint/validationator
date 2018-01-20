@@ -1,6 +1,6 @@
 {
   "name": "validationator",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "A versitile data validator and static type checker. Creat complex models for deeply nested data structures. Create statically typed functions. Switch to bool mode of use in form validation.",
   "main": "index.js",
   "directories": {
@@ -44,7 +44,7 @@
     "eslint-plugin-standard": "^3.0.1",
     "mocha": "^4.1.0",
     "npm-cli-login": "0.0.10",
-    "validationator": "^1.2.2"
+    "validationator": "^1.2.3"
   },
   "dependencies": {
     "validator": "^9.2.0"

@@ -51,20 +51,22 @@ const matchesAny = (test, arr) => {
 const validator = require('validator')
 
 const validationsMaster = {
-  array: (value, { maxLen, minLen, allChildren, children, includes, notIncludes, includesAny, notIncludesAny, name }) => {
+  'array': (value, { maxLen, minLen, allChildren, children, includes, notIncludes, includesAny, notIncludesAny, name }) => {
     if (!Array.isArray(value)) throw new Error(`Expected ${name}: ${value} to be type array. Got ${typeof value}.`)
-    if (typeof minLen !== 'undefined' && value.length < minLen) throw new Error(`Array ${name}: ${value} length is ${value.length}. Less than minimum ${minLen}.`)
-    if (typeof maxLen !== 'undefined' && value.length > maxLen) throw new Error(`Array ${name}: ${value} is ${value.length}. More than maximum ${maxLen}.`)
-    if (typeof includes !== 'undefined' && !JSON.stringify(value).includes(JSON.stringify(includes))) throw new Error(`Array ${name}: ${value} does not include required string: ${includes}.`)
-    if (typeof notIncludes !== 'undefined' && JSON.stringify(value).includes(JSON.stringify(notIncludes))) throw new Error(`Array ${name}: ${value} includes blacklisted string: ${notIncludes}.`)
-    if (typeof includesAny !== 'undefined' && !includesAnyTest(value, includesAny, { stringify: true })) throw new Error(`Array ${name}: ${value} does not include required string from: ${includesAny}.`)
-    if (typeof notIncludesAny !== 'undefined' && includesAnyTest(value, notIncludesAny, { stringify: true })) throw new Error(`Array ${name}: ${value} includes blacklisted string from: ${notIncludesAny}.`)
+    if (minLen && value.length < minLen) throw new Error(`Array ${name}: ${value} length is ${value.length}. Less than minimum ${minLen}.`)
+    if (maxLen && value.length > maxLen) throw new Error(`Array ${name}: ${value} is ${value.length}. More than maximum ${maxLen}.`)
+    if (includes && !JSON.stringify(value).includes(JSON.stringify(includes))) throw new Error(`Array ${name}: ${value} does not include required string: ${includes}.`)
+    if (notIncludes && JSON.stringify(value).includes(JSON.stringify(notIncludes))) throw new Error(`Array ${name}: ${value} includes blacklisted string: ${notIncludes}.`)
+    if (includesAny && !includesAnyTest(value, includesAny, { stringify: true })) throw new Error(`Array ${name}: ${value} does not include required string from: ${includesAny}.`)
+    if (notIncludesAny && includesAnyTest(value, notIncludesAny, { stringify: true })) throw new Error(`Array ${name}: ${value} includes blacklisted string from: ${notIncludesAny}.`)
+
     if (allChildren) {
       value.forEach((item, i) => {
         allChildren.name = allChildren.name || i
         validate(value[i], allChildren)
       })
     }
+
     if (children) {
       if (!Array.isArray(children)) throw new Error(`${name}: ${value}. Children must be an array. Got type ${typeof children}.`)
       children.forEach((model, i) => {
@@ -75,29 +77,30 @@ const validationsMaster = {
     }
   },
 
-  function: (value, { name }) => {
+  'function': (value, { name }) => {
     if (typeof value !== 'function') throw new Error(`Expected ${name}: ${value} to be type function. Got ${typeof value}.`)
   },
 
-  object: (value, { requiredKeys, children, minLen, maxLen, allChildren, includes, notIncludes, includesAny, notIncludesAny, name }) => {
+  'object': (value, { requiredKeys, children, minLen, maxLen, allChildren, includes, notIncludes, includesAny, notIncludesAny, name }) => {
     const valueKeys = Object.keys(value)
     if (typeof value !== 'object' || Array.isArray(value)) throw new Error(`Expected ${name}: ${value} to be type object. Got type ${typeof value}. Array.isArray? ${Array.isArray(value)}.`)
+    if (includes && !JSON.stringify(value).includes(JSON.stringify(includes))) throw new Error(`Object ${name}: ${value} does not include required string: ${includes}.`)
+    if (notIncludes && JSON.stringify(value).includes(JSON.stringify(notIncludes))) throw new Error(`Object ${name}: ${value} includes blacklisted string: ${notIncludes}.`)
+    if (minLen && valueKeys.length < minLen) throw new Error(`Object ${name}: ${value} length is ${valueKeys.length}. Less than minimum ${minLen}.`)
+    if (maxLen && valueKeys.length > maxLen) throw new Error(`Object ${name}: ${value} length is ${valueKeys.length} more than maximum ${maxLen}.`)
+    if (includesAny && !includesAnyTest(value, includesAny, { stringify: true })) throw new Error(`Object ${name}: ${value} does not include required string from: ${includesAny}.`)
+    if (notIncludesAny && includesAnyTest(value, notIncludesAny, { stringify: true })) throw new Error(`Object ${name}: ${value} includes blacklisted string from: ${notIncludesAny}.`)
+    if (allChildren) valueKeys.forEach(valueKey => validate(value[valueKey], allChildren, { name: valueKey }))
+
     if (requiredKeys) {
       requiredKeys.forEach(requiredKey => {
         if (!valueKeys.find(valueKey => valueKey === requiredKey)) throw new Error(`${name}: ${value} missing required key: ${requiredKey}.`)
       })
     }
-    if (typeof includes !== 'undefined' && !JSON.stringify(value).includes(JSON.stringify(includes))) throw new Error(`Object ${name}: ${value} does not include required string: ${includes}.`)
-    if (typeof notIncludes !== 'undefined' && JSON.stringify(value).includes(JSON.stringify(notIncludes))) throw new Error(`Object ${name}: ${value} includes blacklisted string: ${notIncludes}.`)
-    if (typeof minLen !== 'undefined' && valueKeys.length < minLen) throw new Error(`Object ${name}: ${value} length is ${valueKeys.length}. Less than minimum ${minLen}.`)
-    if (typeof maxLen !== 'undefined' && valueKeys.length > maxLen) throw new Error(`Object ${name}: ${value} length is ${valueKeys.length} more than maximum ${maxLen}.`)
-    if (typeof includesAny !== 'undefined' && !includesAnyTest(value, includesAny, { stringify: true })) throw new Error(`Object ${name}: ${value} does not include required string from: ${includesAny}.`)
-    if (typeof notIncludesAny !== 'undefined' && includesAnyTest(value, notIncludesAny, { stringify: true })) throw new Error(`Object ${name}: ${value} includes blacklisted string from: ${notIncludesAny}.`)
-    if (allChildren) valueKeys.forEach(valueKey => validate(value[valueKey], allChildren, { name: valueKey }))
+
     if (children) {
       if (typeof children !== 'object' || Array.isArray(children)) throw new Error(`Expected ${name}: ${value} validation children to be type object. Got type ${typeof value} Array.isArray? ${Array.isArray(value)}.`)
       const modelKeys = Object.keys(children)
-
       modelKeys.forEach(modelKey => {
         let currentModel = children[modelKey]
         if (typeof currentModel === 'string') currentModel = { type: currentModel }
@@ -107,21 +110,26 @@ const validationsMaster = {
     }
   },
 
-  string: (value, { maxLen, minLen, regEx, includes, notIncludes, includesAny, notIncludesAny, name }) => {
+  'string': (value, options) => {
+    const { maxLen, minLen, regEx, includes, notIncludes, includesAny, notIncludesAny, name } = options
     if (typeof value !== 'string') throw new Error(`Expected ${name}: ${value} to be type string. Got type ${typeof value}.`)
-    if (typeof minLen !== 'undefined' && value.length < minLen) throw new Error(`String "${name}: ${value}" length is ${value.length}. Less than minimum ${minLen}.`)
-    if (typeof maxLen !== 'undefined' && value.length > maxLen) throw new Error(`String "${name}: ${value}" length is ${value.length}. more than maximum.`)
-    if (typeof regEx !== 'undefined' && !regEx.test(value)) throw new Error(`String "${name}: ${value}" does not match the validation regEx ${regEx}.`)
-    if (typeof includes !== 'undefined' && !value.includes(includes)) throw new Error(`String "${name}: ${value}" does not include required string: ${includes}.`)
-    if (typeof notIncludes !== 'undefined' && value.includes(notIncludes)) throw new Error(`String "${name}: ${value}" includes blacklisted string: ${notIncludes}.`)
-    if (typeof includesAny !== 'undefined' && !includesAnyTest(value, includesAny)) throw new Error(`String "${name}: ${value}" does not include any required string from: [${includesAny}].`)
-    if (typeof notIncludesAny !== 'undefined' && includesAnyTest(value, notIncludesAny)) throw new Error(`String "${name}: ${value}" includes a blacklisted string from: [${notIncludesAny}].`)
+    if (minLen  && value.length < minLen) throw new Error(`String "${name}: ${value}" length is ${value.length}. Less than minimum ${minLen}.`)
+    if (maxLen && value.length > maxLen) throw new Error(`String "${name}: ${value}" length is ${value.length}. more than maximum.`)
+    if (regEx && !regEx.test(value)) throw new Error(`String "${name}: ${value}" does not match the validation regEx ${regEx}.`)
+    if (includes && !value.includes(includes)) throw new Error(`String "${name}: ${value}" does not include required string: ${includes}.`)
+    if (notIncludes && value.includes(notIncludes)) throw new Error(`String "${name}: ${value}" includes blacklisted string: ${notIncludes}.`)
+    if (includesAny && !includesAnyTest(value, includesAny)) throw new Error(`String "${name}: ${value}" does not include any required string from: [${includesAny}].`)
+    if (notIncludesAny && includesAnyTest(value, notIncludesAny)) throw new Error(`String "${name}: ${value}" includes a blacklisted string from: [${notIncludesAny}].`)
+    if ('upperCase' in options & !validator.isUppercase(value)) throw new Error(`String: ${name}: ${value} is not uppercase!`)
+    if ('lowerCase' in options & !validator.isLowercase(value)) throw new Error(`String: ${name}: ${value} is not lowercase!`)
   },
 
-  number: (value, { max, min, decimals, regEx, name }) => {
+  'number': (value, { max, min, decimals, regEx, name }) => {
     if (typeof value !== 'number') throw new Error(`Expected ${name}: ${value} to be type number. Got ${typeof value}.`)
-    if (typeof min !== 'undefined' && value < min) throw new Error(`Number ${name}: ${value} is less than minimum ${min}.`)
-    if (typeof max !== 'undefined' && value > max) throw new Error(`Number ${name}: ${value} is more than maximum ${max}.`)
+    if (min && value < min) throw new Error(`Number ${name}: ${value} is less than minimum ${min}.`)
+    if (max && value > max) throw new Error(`Number ${name}: ${value} is more than maximum ${max}.`)
+    if (regEx && !regEx.test(value)) throw new Error(`Number ${name}: ${value} does not match regEx ${regEx}.`)
+
     let valDecimals
     if (typeof decimals !== 'undefined' && (() => {
       const stringArr = value.toString().split('.')
@@ -130,20 +138,19 @@ const validationsMaster = {
         return valDecimals > decimals
       }
     })()) throw new Error(`Number: ${value} has ${valDecimals} decimals. More than max ${decimals}.`)
-    if (typeof regEx !== 'undefined' && !regEx.test(value)) throw new Error(`Number ${name}: ${value} does not match regEx ${regEx}.`)
   },
 
-  boolean: (value, { name }) => {
+  'boolean': (value, { name }) => {
     if (typeof value !== 'boolean') throw new Error(`Expected ${name}: ${value} to be type boolean. Got ${typeof value}.`)
   },
 
-  email: (value, validation) => {
-    validate(value, {
-      type: 'string',
-      name: validation.name,
-      maxLen: 50,
-      regEx: /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-    })
+  'email': (value, options) => {
+    validate(value, 'string')
+    if (!validator.isEmail(value, options)) throw new Error(`string: ${value} does not match email validation with options: ${options}`)
+  },
+
+  'is': (value, { exactly }) => {
+    if (typeof value !== typeof exactly || JSON.stringify(value) !== JSON.stringify(exactly)) throw new Error(`value: ${value} is not exactly equal to ${exactly}`)
   },
 
   'string-int': (value, validation) => {
@@ -153,30 +160,28 @@ const validationsMaster = {
     ))
   },
 
-  'postal-code': value => {
+  'postal-code': (value, { state }) => {
     validate(value, ['string', 'number'])
+    state = state || 'any'
     value = `${value}` // convert to string if not number
-    validate(value, {
-      type: 'string',
-      name: 'postal-code',
-      regEx: /^\d{5}(?:[-\s]\d{4})?$/
-    })
+    if (!validator.isPostalCode(value, state)) throw new Error(`value: ${value} is not a valid postal code ${state ? ` for state ${state}` : ''}`)
   },
 
-  url: (value, options) => {
+  'url': (value, options) => {
     validate(value, 'string')
     if (!validator.isURL(value, options)) throw new Error(`URL ${value} did not match the validation: ${options}`)
   },
 
-  date: value => {
-    validate(value, {
-      type: 'string',
-      name: 'date',
-      regEx: /(0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])[- /.](19|20)[0-9]{2}/
-    })
+  'date': value => {
+    if (!validator.toDate(value)) throw new Error(`value: ${value} is not a valid date`)
   },
 
-  phone: value => {
+  'date-obj': value => {
+    validate(value, 'object')
+    if (Object.prototype.toString.call(value) !== '[object Date]') throw new Error(`value: ${value} is not a valid date object`)
+  },
+
+  'phone': (value, { mobile }) => {
     validate(value, ['string', 'number'])
     value = `${value}` // convert to string if not number
     validate(value, {
@@ -184,11 +189,124 @@ const validationsMaster = {
       name: 'phone',
       regEx: /^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*$/
     })
+    if (mobile === true) mobile = 'any'
+    if (mobile) validate.isMobilePhone(value, mobile)
   },
 
-  alpha: value => {
+  'alpha': (value, { locale }) => {
     validate(value, 'string')
-    if (!validator.isAlpha(value)) throw new Error(`string: ${value} is not alpha numeric.`)
+    if (!validator.isAlpha(value, locale)) throw new Error(`string: ${value} is not alpha.`)
+  },
+
+  'alpha-numeric': (value, { locale }) => {
+    validate(value, ['string', 'number'])
+    if (!validator.isAlphanumeric(value, locale)) throw new Error(`value: ${value} is not alpha numeric.`)
+  },
+
+  'ascii': value => {
+    validate(value, 'string')
+    if (!validator.isAlphanumeric(value)) throw new Error(`string: ${value} is not an ascii string.`)
+  },
+
+  'base64': value => {
+    validate(value, 'string')
+    if (!validator.isBase64(value)) throw new Error(`string: ${value} is not a base64 string.`)
+  },
+
+  'credit-card': value => {
+    validate(value, ['string', 'number'])
+    if (!validator.isCreditCard(value)) throw new Error(`value: ${value} is not a valid credit card number.`)
+  },
+
+  'currency': (value, options) => {
+    if (!validator.isCurrency(value, options)) throw new Error(`value: ${value} is not a valid currency with options: ${options}.`)
+  },
+
+  'data-uri': value => {
+    validate(value, 'string')
+    if (!validator.isDataURI(value)) throw new Error(`value: ${value} is not a valid data URI.`)
+  },
+
+  'fqdn': (value, options) => {
+    validate(value, 'string')
+    if (!validator.isFQDN(value, options)) throw new Error(`value: ${value} is not a valid fully qualified domain name.`)
+  },
+
+  'float': (value, options) => {
+    validate(value, 'number')
+    if (!validator.isFloat(value, options)) throw new Error(`value: ${value} is not a valid float.`)
+  },
+
+  'hash': (value, { algorithm }) => {
+    if (!validator.isFloat(value, algorithm)) throw new Error(`value: ${value} is not a valid ${algorithm} hash.`)
+  },
+
+  'hex-color': value => {
+    if (!validator.isFloat(value)) throw new Error(`value: ${value} is not a valid hex color.`)
+  },
+
+  'hex-dec': value => {
+    if (!validator.isHexadecimal(value)) throw new Error(`value: ${value} is not a valid hexadecimal.`)
+  },
+
+  'ip': (value, { version }) => {
+    if (!validator.isIP(value)) throw new Error(`value: ${value} is not a valid IP v. ${version}.`)
+  },
+
+  'isbn': (value, { version }) => {
+    if (!validator.isIP(value)) throw new Error(`value: ${value} is not a valid ISBN v. ${version}.`)
+  },
+
+  'issn': (value, options) => {
+    if (!validator.isISSN(value, options)) throw new Error(`value: ${value} is not a valid ISSN with options ${options}.`)
+  },
+
+  'isin': value => {
+    if (!validator.isISIN(value)) throw new Error(`value: ${value} is not a valid ISIN (stock/security identifier).`)
+  },
+
+  'iso8601': value => {
+    if (!validator.isISO8601(value)) throw new Error(`value: ${value} is not a valid ISO8601.`)
+  },
+
+  'isrc': value => {
+    if (!validator.isISRC(value)) throw new Error(`value: ${value} is not a valid ISRC.`)
+  },
+
+  'int': (value, options) => {
+    if (!validator.isInt(value, options)) throw new Error(`value: ${value} is not a valid int with options: ${options}.`)
+  },
+
+  'json': value => {
+    if (!validator.isJSON(value)) throw new Error(`value: ${value} is not a valid JSON.`)
+  },
+
+  'lat-long': value => {
+    if (!validator.isLatLong(value)) throw new Error(`value: ${value} is not a valid lat-long.`)
+  },
+
+  'mac': value => {
+    if (!validator.isMACAddress(value)) throw new Error(`value: ${value} is not a valid MAC address.`)
+  },
+
+  'md5': value => {
+    if (!validator.isMD5(value)) throw new Error(`value: ${value} is not a valid MD5 hash.`)
+  },
+
+  'mime-type': value => {
+    if (!validator.isMimeType(value)) throw new Error(`value: ${value} is not a valid mime type.`)
+  },
+
+  'mongo-id': value => {
+    if (!validator.isMongoId(value)) throw new Error(`value: ${value} is not a valid mongo-id.`)
+  },
+
+  'port': value => {
+    if (!validator.isPort(value)) throw new Error(`value: ${value} is not a valid port number.`)
+  },
+
+  'uuid': value => {
+    if (!validator.isUUID(value)) throw new Error(`value: ${value} is not a valid UUID.`)
   }
 }
 
@@ -258,7 +376,7 @@ const validate = (value, validation) => {
 
       // craft validation set
       let validations = validate.only ? validate.only : validationsMaster
-      if (validate.extensions) validations = { ...validations, ...validate.extensions }
+      if (validate.extensions) validations = Object.assign({}, validations, validate.extensions)
       const validationTypes = Object.keys(validations)
 
       validationTypes.forEach(type => {
