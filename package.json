@@ -1,7 +1,7 @@
 {
   "name": "validationator",
-  "version": "1.2.3",
-  "description": "A versitile data validator and static type checker. Creat complex models for deeply nested data structures. Create statically typed functions. Switch to bool mode of use in form validation.",
+  "version": "2.0.2",
+  "description": "A versitile data validator and static type checker. Creat complex models for deeply nested data structures. Create statically typed functions. Switch to bool mode of use in form validation, and much more.",
   "main": "index.js",
   "directories": {
     "test": "test"
@@ -18,16 +18,28 @@
     "publish:start": "chmod +x ./bin/publish-start.sh; ./bin/publish-start.sh",
     "publish:finish": "chmod +x ./bin/publish-finish.sh; ./bin/publish-finish.sh"
   },
-  "repository": "asdf",
+  "repository": "https://github.com/hattonpoint/validationator.git",
   "keywords": [
     "validation",
     "validate",
     "type checker",
+    "type",
+    "checker",
+    "front end",
+    "backend",
+    "testing",
     "typed",
     "typed functions",
+    "typed",
     "deeply nested",
     "nested",
-    "data structures"
+    "data structures",
+    "data",
+    "structures",
+    "static",
+    "validator",
+    "validation",
+    "validate"
   ],
   "author": "Ian Lancaster",
   "license": "ISC",
@@ -44,7 +56,7 @@
     "eslint-plugin-standard": "^3.0.1",
     "mocha": "^4.1.0",
     "npm-cli-login": "0.0.10",
-    "validationator": "^1.2.3"
+    "validationator": "^2.0.2"
   },
   "dependencies": {
     "validator": "^9.2.0"

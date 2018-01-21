@@ -1,12 +1,24 @@
-Validationator is a flexible and powerful javascript data validation library. validationator is split into two major functions; validate and validateFunc. validate is the core of the library allowing you to validate simple and complex data structures in various ways by creating a model of the data structure. validateFunc allows you to add an inputModel and/or outputModel to a function to make it statically typed. Validate uses the validator.js library under the hood, so if you are familiar with those validations you should be familiar with much of this library.
+<center>
+  <a href="https://hattonpoint.com">
+    <img
+      src="./assets/validationator-header.png"
+      style="width: 500px"
+    />
+  </a>
+  <p>Current version: 2.0.1</p>
+  <a href='./docs/changelog.md'><p>Change log</p></a>
+</center>
+
+Validationator is a flexible and powerful javascript typing & data validation library. validationator is split into two major functions; validate and validateFunc. validate is the core of the library allowing you to validate simple and complex data structures in various ways by creating a model of the data structure. validateFunc allows you to add an inputModel and/or outputModel to a function to make it statically typed. Validate uses the validator.js library under the hood, so if you are familiar with those validations you should be familiar with much of this library.
 
 Why use validationator:
 
 * statically type js functions for more robust applications
 * it's super small, super fast, and backwards compatable
 * throw useful errors for faster debugging
-* very versitile api
+* very versitile api (try out bool mode to return true/false instead of errors)
 * validate forms with ease
+* easily add your own custom validations
 
 Wait, doesn't flow do this already? Yes, flow does allow for static typing, but it does not allow for nested data structures or non-type validation checks. This is also a semi-runtime library where flow is compile-time. I say semi because the library is set to look for a 'production' node environment variable and will to bypass any validation. 
 
@@ -15,23 +27,23 @@ validate.js
 
 ```javascript
 validate(value, validation)
- 
-// ie.
+
 validate(332.34, {
   type: 'number',
   decimals: 2,
   name: 'test1',
-   bool: true
-})
+  bool: true
+}) // ==> true
  
 // or
-validate(332.34, { type: 'number' })
+validate(332.34, { type: 'number' }) // ==> 332.34
 
 // or use the shorthand for type only check
-validate(332.34, 'number')
+validate(332.34, 'string') // trows an error
 
 // you can get pretty specific
 const value = [ 12, 'hello', false]
+validate.warn = true
 
 validate(value, { type: 'array',
   children: [
@@ -39,11 +51,11 @@ validate(value, { type: 'array',
     { type: 'is', exactly: 'hello'},
     { type: 'bool', notRequired: true }
   ]
-})
+}) // ==> returns value, error is thrown as warning in console
  
 // you can also do an OR validation by passing an array of validation objects. ie
-validate('i am a string', [{ type: 'number' }, { type: 'string' }])
-validate(44, ['number', 'string'])
+validate('i am a string', [{ type: 'number' }, { type: 'string' }]) // ==> 'i am a string'
+validate(44, ['number', 'string']) // ==> 44
 
 ```
 
@@ -112,7 +124,19 @@ Just a type check.
 ```javascript
 validate(true, 'bool') // ==> true
 validate('asdf', 'bool') // throws error
-validate(false, { type: 'bool', acceptedNulls: [0] }) // ==> false
+validate(false, { type: 'bool', acceptedNulls: [false] }) // ==> false (because it is returning the original value on success)
+
+validate(false, {
+  type: 'bool',
+  bool: true,
+  acceptedNulls: [false]
+})
+// ==> true
+
+// but really though. Think about whether or not you need to use validate
+typeof false === 'boolean'
+// ==> true
+// same thing, way faster.
 ```
 
 Remember to add false to the acceptedNulls list if you want them not to fail this validation
@@ -151,12 +175,12 @@ validate(increment, 'function') // ==> increment
 -   **minLength\<number>**
 -   **maxLength\<number>**
 -   **requredKeys\<array<string>>**
--   **allChildren\<validationModel>** - validates every child against the given validation model
--   **children\<object>** - an object with keys that match the expected keys of the value with a valueModel for each key. This allows for deeply nested data structure models.
 -   **includes\<any>** - fail validation if object does not include value
 -   **notIncludes\<any>** - fail validation if object does include value
 -   **includesAny\<any>** - fail validation if object does not include any of the values in an array
 -   **notIncludesAny\<[any]>** - fail validation if object does include any of the values in an array
+-   **allChildren\<validationModel>** - validates every child against the given validation model
+-   **children\<object>** - an object with keys that match the expected keys of the value with a valueModel for each key. This allows for deeply nested data structure models.
 
 
 ### array
@@ -164,12 +188,12 @@ validate(increment, 'function') // ==> increment
 -   **minLength\<number>**
 -   **maxLength\<number>**
 -   **requredKeys\<array<string>>**
--   **allChildren\<validationModel>** - validates every child against the given validation model
--   **children\<array>** - an array of valueModels that corresponds to the expected value in an array. This allows for deeply nested data structure models.
 -   **includes\<any>** - fail validation if array does not include value
 -   **notIncludes\<any>** - fail validation if array does include value
 -   **includesAny\<any>** - fail validation if array does not include any of the values in an array
 -   **notIncludesAny\<[any]>** - fail validation if array does include any of the values in an array
+-   **allChildren\<validationModel>** - validates every child against the given validation model
+-   **children\<array>** - an array of valueModels that corresponds to the expected value in an array. This allows for deeply nested data structure models.
 
 ## validator validations
 note all of the validations below are powered by the validator package. See the validator docs for more info on the options. Validator options can be provided through the validation object. They should work as expected, but I still need to write tests to verify and need to add better use documentation below. For now, I am just showing an example of the error that will be thrown if validation is not met.
@@ -266,7 +290,7 @@ To add validations define validate.extensions as an object. Every key you add wi
 
 validate itself throws errors by default, so feel free to validate itself within the validations.
 
-If you create a valuable validation please visit our contribution guidelines page and consider submitting a pull request :)
+If you create a valuable validation please visit our [contribution guidelines](./docs/contribution.md) page and consider submitting a pull request :)
 
 ```js
 const validate = require('validationator').validate
@@ -546,3 +570,6 @@ const testFunc2 = (num, char, bool) => {
  
 testFunc2(50, 'a', false) // now a strongly typed function
 ```
+
+TODO:
+* add class type with intanceOf and strictInstanceOf
