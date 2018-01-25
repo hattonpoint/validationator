@@ -1,13 +1,13 @@
-<center>
+<div style="text-align: center">
   <a href="https://hattonpoint.com">
     <img
       src="./assets/validationator-header.png"
-      style="width: 500px"
+      style="width: 500px, display: block; margin: auto;"
     />
   </a>
   <p>Current version: 2.0.1</p>
   <a href='./docs/changelog.md'><p>Change log</p></a>
-</center>
+</div>
 
 Validationator is a flexible and powerful javascript typing & data validation library. validationator is split into two major functions; validate and validateFunc. validate is the core of the library allowing you to validate simple and complex data structures in various ways by creating a model of the data structure. validateFunc allows you to add an inputModel and/or outputModel to a function to make it statically typed. Validate uses the validator.js library under the hood, so if you are familiar with those validations you should be familiar with much of this library.
 

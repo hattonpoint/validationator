@@ -10,6 +10,11 @@ module.exports = (validate, validateFunc) => {
         assert.throws(() => validate('test string', { type: 'array' }))
       })
 
+      it('type primative', () => {
+        validate('test string', String)
+        assert.throws(() => validate('test string', Array))
+      })
+
       it('type shorthand', () => {
         validate('test string', 'string')
         assert.throws(() => validate('test string', 'array'))
@@ -77,8 +82,8 @@ module.exports = (validate, validateFunc) => {
 
       it('or', () => {
         validate('test@gmail.com', [
-          { type: 'string', maxLen: 4 },
-          { type: 'string', regEx: emailRegEx }
+          { String, maxLen: 4 },
+          { String, regEx: emailRegEx }
         ])
 
         assert.throws(() => {
@@ -227,7 +232,7 @@ module.exports = (validate, validateFunc) => {
       })
 
       it('maxLen', () => {
-        validate({ a: 1 }, { type: 'object', maxLen: 1 })
+        validate({ a: 1 }, { Object, maxLen: 1 })
         assert.throws(() => validate({ a: 1, b: 2 }, { type: 'object', maxLen: 1 }))
       })
 
@@ -303,18 +308,17 @@ module.exports = (validate, validateFunc) => {
 
     context('LARGE DATA STRUCTURE', () => {
       it('min', () => {
-        const validation = { type: 'object',
+        const validation = { Object,
           children: {
-            a1: 'string',
-            a2: {
-              type: 'object',
+            a1: String,
+            a2: { Object,
               requiredFields: ['b1'],
-              allChilden: [ 'object', 'array' ],
+              allChilden: [ Object, Array ],
               children: {
                 b1: {
-                  type: 'object',
+                  type: Object,
                   children: {
-                    c1: { type: 'number', min: 5, max: 100, isRequired: true }
+                    c1: { Number, min: 5, max: 100, isRequired: true }
                   }
                 }
               }
@@ -472,17 +476,17 @@ module.exports = (validate, validateFunc) => {
         }
 
         testFunc.inputModel = [
-          { type: 'number', min: 40 },
-          { type: 'string', maxLen: 1 },
-          { type: 'bool', notRequired: true }
+          { Number, min: 40 },
+          { String, maxLen: 1 },
+          { Boolean, notRequired: true }
         ]
 
         testFunc.outputModel = {
-          type: 'object',
+          Object,
           children: {
-            see: 'string',
-            coolness: { type: 'number', min: 10000 },
-            itSucks: { type: 'bool', notRequired: true }
+            see: String,
+            coolness: { Number, min: 10000 },
+            itSucks: { Boolean, notRequired: true }
           }
         }
 
@@ -494,9 +498,8 @@ module.exports = (validate, validateFunc) => {
 
   describe('fuelsy tests', () => {
     it('should validate the leads even after deploying to npm', () => {
-      const leadValidationModel = (lead, bool) => ({
+      const leadValidationModel = (lead, bool) => ({ Object,
         bool,
-        type: 'object',
         notIncludes: 'undefined',
         requiredKeys: [ 'ContactPosition', 'LeadTitle', 'LeadIndustries',
           'LeadKeywords', 'Price', 'ContactPhone', 'CompanyName', 'CompanyPostalCode',

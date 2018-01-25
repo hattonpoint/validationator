@@ -144,6 +144,10 @@ const validationsMaster = {
     if (typeof value !== 'boolean') throw new Error(`Expected ${name}: ${value} to be type boolean. Got ${typeof value}.`)
   },
 
+  'bool': (value, { name }) => {
+    if (typeof value !== 'boolean') throw new Error(`Expected ${name}: ${value} to be type boolean. Got ${typeof value}.`)
+  },
+
   'email': (value, options) => {
     validate(value, 'string')
     if (!validator.isEmail(value, options)) throw new Error(`string: ${value} does not match email validation with options: ${options}`)
@@ -371,6 +375,15 @@ const validate = (value, validation) => {
 
       // Enable shorthand type check
       if (typeof validation === 'string') validation = { type: validation }
+
+      // Enable primative based api
+      if (typeof validation === 'function') { validation = { type: validation.name } }
+      if (typeof validation.type === 'function') { validation.type = validation.type.name }
+      [ 'Boolean', 'Number', 'String', 'Object', 'Array', 'Function' ].forEach(primative => {
+        if (typeof validation[primative] === 'function') { validation.type = validation[primative].name }
+      })
+
+      // check to make sure that a type was set
       if (!validation.type) throw new Error(`${name}: ${value}.type is required`)
       if (validation.extend) validation.extend(value, validation)
 
