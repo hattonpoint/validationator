@@ -148,6 +148,15 @@ const validationsMaster = {
     if (typeof value !== 'boolean') throw new Error(`Expected ${name}: ${value} to be type boolean. Got ${typeof value}.`)
   },
 
+  'instance': (value, { of, strict }) => {
+    if (!of || typeof of !== 'function') throw new Error(`Instance validation for ${value} failed. Must provide constructor through the "of" option.`)
+    if (strict) {
+      if (value.constructor !== of) throw new Error(`value: ${value} is not a strict instance of ${of}`)
+    } else {
+      if (!(value instanceof of)) throw new Error(`value: ${value} is not an instance of ${of}`)
+    }
+  },
+
   'email': (value, options) => {
     validate(value, 'string')
     if (!validator.isEmail(value, options)) throw new Error(`string: ${value} does not match email validation with options: ${options}`)
@@ -392,11 +401,16 @@ const validate = (value, validation) => {
       if (validate.extensions) validations = Object.assign({}, validations, validate.extensions)
       const validationTypes = Object.keys(validations)
 
+      let validationFound = false
+
       validationTypes.forEach(type => {
         if (validation.type.toLowerCase() === type) {
           validations[type](value, validation)
+          validationFound = true
         }
       })
+
+      if (!validationFound) throw new Error(`valitaion type: ${validation.type} not found!`)
 
       // options, options, options
       if (BOOL) return true

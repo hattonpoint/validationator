@@ -281,6 +281,21 @@ module.exports = (validate, validateFunc) => {
       })
     })
 
+    context('INSTANCE', () => {
+      it('type/of', () => {
+        const Animal = class Animal {}
+        const sloth = new Animal()
+        const towel = { greet: () => console.log("you're a towel!") }
+
+        validate(sloth, { type: 'instance', of: Animal })
+        assert.throws(() => validate(towel, { type: 'instance', of: Animal }))
+
+        // strict
+        validate(sloth, { type: 'instance', of: Object })
+        assert.throws(() => validate(sloth, { type: 'instance', of: Object, strict: true }))
+      })
+    })
+
     context('EMAIL', () => {
       it('type', () => {
         validate('user@company.com', 'email')
