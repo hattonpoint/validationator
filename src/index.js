@@ -505,6 +505,30 @@ const validateInput = (params, inputModel, func, name) => {
 }
 
 // ------------------------------------
+// type
+// ------------------------------------
+
+const type = (validationType, value, validationOptions) => {
+  const shouldBypassValidation = () =>
+    (process.env.NODE_ENV === 'production' || type.off) && (!type.on || !type.bool)
+  if (shouldBypassValidation()) return
+  try {
+    if (typeof validationType !== 'object') validationType = { type: validationType }
+    return validate(value, Object.assign(validationType, validationOptions))
+  } catch (err) {
+    if (type.warn && !type.bool) {
+      console.warn(err)
+      return value
+    } else if (type.bool) {
+      if (type.warn) console.warn(err)
+      return false
+    } else {
+      throw err
+    }
+  }
+}
+
+// ------------------------------------
 // exports
 // ------------------------------------
 
@@ -512,6 +536,7 @@ const validateInput = (params, inputModel, func, name) => {
   var _ = {
     validate,
     validateFunc,
+    type,
     validations: validationsMaster
   }
 

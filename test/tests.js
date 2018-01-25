@@ -1,6 +1,6 @@
 const assert = require('chai').assert
 
-module.exports = (validate, validateFunc) => {
+module.exports = (validate, validateFunc, type) => {
   describe('validate.js tests', () => {
     context('STRING', () => {
       const emailRegEx = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
@@ -413,6 +413,19 @@ module.exports = (validate, validateFunc) => {
         console.log('NOTE: This will print an error to the console while testing. That is expected.')
         assert(validate(33, { type: 'string', warn: true }) === 33)
       })
+    })
+  })
+
+  describe('type.js tests', () => {
+    const x = type
+    it('should work like so', () => {
+      type(String, 'asdf')
+
+      x(Number, 11, {
+        min: 10
+      })
+
+      assert.throws(() => x({ Number, min: 20 }, 11))
     })
   })
 
