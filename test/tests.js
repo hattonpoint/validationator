@@ -1,6 +1,6 @@
 const assert = require('chai').assert
 
-module.exports = (validate, validateFunc, type) => {
+module.exports = (validate, validateFunc, type, typeClass) => {
   describe('validate.js tests', () => {
     context('STRING', () => {
       const emailRegEx = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
@@ -294,6 +294,66 @@ module.exports = (validate, validateFunc, type) => {
         validate(sloth, { type: 'instance', of: Object })
         assert.throws(() => validate(sloth, { type: 'instance', of: Object, strict: true }))
       })
+
+      it('should know what a hooligan is', () => {
+        const Hooligan = class Hooligan {
+          constructor (name) {
+            this.name = name
+            this.stomach = []
+            this.mood = 'grumpy'
+          }
+
+          eat (food) {
+            this.stomach.push(food)
+          }
+
+          drink (drank) {
+            if (drank === 'coffee') this.mood = 'better'
+          }
+        }
+
+        const Ian = new Hooligan('Ian')
+
+        validate(Ian, {
+          type: 'instance',
+          of: Hooligan,
+          strict: true,
+          children: {
+            name: String,
+            eat: Function,
+            drink: Function
+          }
+        })
+
+        const backPack = {
+          brand: 'North Face',
+          price: 20,
+          contents: [
+            'water bottle',
+            'jacket'
+          ],
+          fannyPack: {
+            style: -1000,
+            contents: 'questionable'
+          }
+        }
+
+        const validationModel = {
+          Object,
+          brand: String,
+          price: { Number, max: 50 },
+          contents: { Array, allChilden: String },
+          fannyPack: {
+            Object,
+            children: {
+              style: { Number, max: 0 },
+              contents: { type: 'is', exactly: 'questionable' }
+            }
+          }
+        }
+
+        validate(backPack, validationModel)
+      })
     })
 
     context('EMAIL', () => {
@@ -416,6 +476,104 @@ module.exports = (validate, validateFunc, type) => {
     })
   })
 
+  const { get } = require('lodash')
+
+  describe('Typed Class', () => {
+    context('The typed hooligan class', () => {
+
+      const TypedClass = class TypedClass {
+        setState (changes) {
+          Object.keys(changes).forEach(changeKey => {
+            if (get(this, `model.props.${changeKey}`)) {
+              this[changeKey] = validate(changes[changeKey], this.model.props[changeKey])
+            }
+            this[changeKey] = changes[changeKey]
+          })
+        }
+      }
+
+      let Hooligan = class Hooligan extends TypedClass {
+        constructor ({ name, height }) {
+          super({ name, height })
+          this.name = name
+          this.height = height
+          this.stomach = []
+          this.mood = 'grumpy'
+          this.check = typeClass(Hooligan, hooliganModel)
+        }
+
+        eat (food) {
+          this.setState({
+            stomach: [ ...this.stomach, food ]
+          })
+
+          return 'uhh.. not food'
+        }
+
+        drink (drank) {
+          if (drank === 'coffee') this.mood = 'better'
+        }
+      }
+
+      const hooliganModel = {
+        constructor: {
+          name: String,
+          height: Number
+        },
+        props: {
+          name: String,
+          stomach: { Array, allChildren: String },
+          mood: String,
+          height: Number
+        },
+        methods: {
+          eat: {
+            inputModel: String,
+            outputModel: String
+          },
+          drink: {
+            inputModel: String,
+            outputModel: undefined
+          }
+        }
+      }
+
+      Hooligan.model = hooliganModel
+
+      const TypedHooligan = typeClass(Hooligan)
+
+      it('should throw an error if the params passed into the constructor are not correct', () => {
+        assert.throws(() => new TypedHooligan(12))
+      })
+
+      it('should create a getter and typed setter class for props defined in model', () => {
+        const Ian = new TypedHooligan({ name: 'Ian', height: 60 })
+        assert(Ian.name() === 'Ian')
+        assert(Ian.setName('Ignatious') === 'Ignatious')
+        assert(Ian.name() === 'Ignatious')
+        assert.throws(() => Ian.setName(123))
+      })
+
+      it('should type the input and output of defined methods', () => {
+        const Ian = new TypedHooligan({ name: 'Ian', height: 60 })
+        Ian.drink('coffee')
+        assert.throws(() => Ian.drink(123))
+
+        console.log('Ian.stomach() :  : ', Ian.stomach())
+        Ian.eat('apple')
+        Ian.eat('apple')
+        console.log('Ian.stomach() :  : ', Ian.stomach())
+
+        let punkRobotModel = hooliganModel
+        punkRobotModel.methods.eat.outputModel = Number
+
+        const Robot = typeClass(Hooligan, punkRobotModel)
+        const rob = new Robot({ name: 'rob', height: 60 })
+        assert.throws(() => rob.eat('apple'))
+      })
+    })
+  })
+
   describe('type.js tests', () => {
     const x = type
     it('should work like so', () => {
@@ -425,7 +583,7 @@ module.exports = (validate, validateFunc, type) => {
         min: 10
       })
 
-      assert.throws(() => x({ Number, min: 20 }, 11))
+      assert.throws(() => x({ Number, min: 20 }, 12))
     })
   })
 
@@ -434,9 +592,15 @@ module.exports = (validate, validateFunc, type) => {
       it('should validate the output', () => {
         const testFunc = () => 'asdf'
         testFunc.outputModel = 'string'
-        validateFunc(testFunc)
+        assert(validateFunc(testFunc) === 'asdf')
         testFunc.outputModel = 'number'
         assert.throws(() => validateFunc(testFunc))
+      })
+
+      it('should validate output with model defined separatly', () => {
+        const testFunc = () => 'asdf'
+        assert(validateFunc(testFunc, null, { outputModel: String }) === 'asdf')
+        assert.throws(() => validateFunc(testFunc, null, { outputModel: Number }))
       })
 
       it('should return the function return value', () => {
@@ -449,7 +613,7 @@ module.exports = (validate, validateFunc, type) => {
     context('validate input only', () => {
       it('should validate a single func param', () => {
         const increment = number => number + 1
-        increment.inputModel = 'number'
+        increment.inputModel = Number
         validateFunc(increment, 1)
         assert.throws(() => validateFunc(increment, 'a'))
       })

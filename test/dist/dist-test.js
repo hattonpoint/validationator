@@ -1,5 +1,4 @@
 const runTests = require('../tests')
-const validate = require('../../dist').validate
-const validateFunc = require('../../dist').validateFunc
+const { validate, validateFunc, type } = require('../../dist')
 
-runTests(validate, validateFunc)
+runTests(validate, validateFunc, type)

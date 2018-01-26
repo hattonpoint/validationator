@@ -1,6 +1,6 @@
 {
   "name": "validationator",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "A versitile data validator and static type checker. Creat complex models for deeply nested data structures. Create statically typed functions. Switch to bool mode of use in form validation, and much more.",
   "main": "index.js",
   "directories": {
@@ -22,24 +22,17 @@
   "keywords": [
     "validation",
     "validate",
-    "type checker",
+    "static",
     "type",
     "checker",
-    "front end",
-    "backend",
-    "testing",
     "typed",
-    "typed functions",
-    "typed",
-    "deeply nested",
+    "functions",
+    "deep",
+    "deeply",
     "nested",
-    "data structures",
     "data",
     "structures",
-    "static",
-    "validator",
-    "validation",
-    "validate"
+    "classes"
   ],
   "author": "Ian Lancaster",
   "license": "ISC",
@@ -56,9 +49,10 @@
     "eslint-plugin-standard": "^3.0.1",
     "mocha": "^4.1.0",
     "npm-cli-login": "0.0.10",
-    "validationator": "^2.0.2"
+    "validationator": "^2.0.3"
   },
   "dependencies": {
+    "lodash": "^4.17.4",
     "validator": "^9.2.0"
   }
 }

@@ -81,9 +81,9 @@ const validationsMaster = {
     if (typeof value !== 'function') throw new Error(`Expected ${name}: ${value} to be type function. Got ${typeof value}.`)
   },
 
-  'object': (value, { requiredKeys, children, minLen, maxLen, allChildren, includes, notIncludes, includesAny, notIncludesAny, name }) => {
+  'object': (value, { requiredKeys, children, minLen, maxLen, allChildren, includes, notIncludes, includesAny, notIncludesAny, name, isInstance }) => {
     const valueKeys = Object.keys(value)
-    if (typeof value !== 'object' || Array.isArray(value)) throw new Error(`Expected ${name}: ${value} to be type object. Got type ${typeof value}. Array.isArray? ${Array.isArray(value)}.`)
+    if ((typeof value !== 'object' || Array.isArray(value)) && !isInstance) throw new Error(`Expected ${name}: ${value} to be type object. Got type ${typeof value}. Array.isArray? ${Array.isArray(value)}.`)
     if (includes && !JSON.stringify(value).includes(JSON.stringify(includes))) throw new Error(`Object ${name}: ${value} does not include required string: ${includes}.`)
     if (notIncludes && JSON.stringify(value).includes(JSON.stringify(notIncludes))) throw new Error(`Object ${name}: ${value} includes blacklisted string: ${notIncludes}.`)
     if (minLen && valueKeys.length < minLen) throw new Error(`Object ${name}: ${value} length is ${valueKeys.length}. Less than minimum ${minLen}.`)
@@ -103,7 +103,6 @@ const validationsMaster = {
       const modelKeys = Object.keys(children)
       modelKeys.forEach(modelKey => {
         let currentModel = children[modelKey]
-        if (typeof currentModel === 'string') currentModel = { type: currentModel }
         currentModel.name = currentModel.name || modelKey
         validate(value[modelKey], currentModel)
       })
@@ -148,13 +147,15 @@ const validationsMaster = {
     if (typeof value !== 'boolean') throw new Error(`Expected ${name}: ${value} to be type boolean. Got ${typeof value}.`)
   },
 
-  'instance': (value, { of, strict }) => {
+  'instance': (value, options) => {
+    const { of } = options
     if (!of || typeof of !== 'function') throw new Error(`Instance validation for ${value} failed. Must provide constructor through the "of" option.`)
-    if (strict) {
+    if ('strict' in options) {
       if (value.constructor !== of) throw new Error(`value: ${value} is not a strict instance of ${of}`)
     } else {
       if (!(value instanceof of)) throw new Error(`value: ${value} is not an instance of ${of}`)
     }
+    validate(value, Object.assign({}, options, { type: Object, isInstance: true }))
   },
 
   'email': (value, options) => {
@@ -433,43 +434,61 @@ const validate = (value, validation) => {
 // validateFunc
 // ------------------------------------
 
+const typeFunc = (func, options) => {
+  return params => validateFunc(func, params, options)
+}
+
 const validateFunc = (func, params, options = {}) => {
+  if (!func) throw new Error('Missing required argument func')
+  if (typeof func !== 'function') throw new Error('First argument is not a function!')
+
+  // conform param type to array
+  params = Array.isArray(params) ? params : [ params ]
+
+  // allow for the validation of constructors as well
+  const returnVal = (() => {
+    // identify constructors to return validated instances
+    if (validate(func.name[0], { String, upperCase: true, bool: true })) {
+      return new func(...params) // eslint-disable-line
+    } else {
+      return func(...params)
+    }
+  })()
+
+  // check to see if validation should be bypassed
+  if ((process.env.NODE_ENV === 'production' || options.off) && !options.on) return returnVal
+
+  const name = options.name || func.name
+  const inputModel = options.inputModel || func.inputModel
+  const outputModel = options.outputModel || func.outputModel
+
   try {
-    const name = options.name || func.name
-    // conform param type to array
-    params = Array.isArray(params) ? params : [ params ]
-    // check to see if validation should be bypassed
-    if ((process.env.NODE_ENV === 'production' || options.off) && !options.on) return func(...params)
-
-    if (!func) throw new Error('Missing required argument func')
-    if (typeof func !== 'function') throw new Error('First argument is not a function!')
-
-    const inputModel = func.inputModel
-    const outputModel = func.outputModel
+    // look for undefined output
+    if ((('outputModel' in options && !outputModel) ||
+      ('outputModel' in func && !outputModel)) &&
+      returnVal !== undefined) throw new Error(`Expected an undefined retrun value but ${typeof returnVal} was found`)
 
     if (inputModel) validateInput(params, inputModel, func, name)
-    if (outputModel) validate(func(...params), outputModel)
+    if (outputModel) validate(returnVal, outputModel)
   } catch (err) {
     if (options.warn) {
       console.warn(err)
-      return func(...params)
+      return returnVal
     } else {
       throw err
     }
   }
 
-  return func(...params)
+  return returnVal
 }
 
 const validateInput = (params, inputModel, func, name) => {
-  const paramNames = getFuncParamNames(func)
   // enable shorthand type check
-  if (typeof inputModel === 'string') inputModel = { type: inputModel }
+  if (typeof inputModel === 'string' || typeof inputModel === 'function') inputModel = { type: inputModel }
 
   // single parameter
-  if (typeof inputModel.type === 'string') {
+  if (typeof inputModel.type === 'string' || typeof inputModel.type === 'function') {
     if (params.length > 1) throw new Error(`ERROR: ${name} expected 1 parameter but received ${params.length}`)
-    inputModel.name = inputModel.name || paramNames[0]
     validate(params[0], inputModel)
     return
   }
@@ -489,11 +508,6 @@ const validateInput = (params, inputModel, func, name) => {
     params = params[0]
     if (typeof params !== 'object' || Array.isArray(params)) throw new Error(`Error: Expected a single object as the sole function param (ES6 parameter destructuring).`)
     const modelKeys = Object.keys(inputModel)
-    const paramKeys = Object.keys(params)
-
-    paramKeys.forEach(paramKey => {
-      if (!matchesAny(paramKey, paramNames)) throw new Error(`ERROR: The paramKey '${paramKey}' does not match any of the available parameters: ${paramNames.toString()}`)
-    })
 
     modelKeys.forEach(modelKey => {
       inputModel[modelKey].name = inputModel[modelKey].name || modelKey
@@ -501,20 +515,79 @@ const validateInput = (params, inputModel, func, name) => {
     })
     return
   }
-  throw new Error(`UNKNOWN ERROR: the function input model did not match the api spec.`)
+  throw new Error(`UNKNOWN ERROR: the function inputModel: ${inputModel} did not match the api spec.`)
+}
+
+// ------------------------------------
+// typeClass
+// ------------------------------------
+
+// class update
+
+// requirements:
+// Define a model of a class to be able to wrap the class in validation
+// Wrap every instance of the class in typedness
+// Props wraps value in validation and create get / set extensions
+// - will have to be classes
+// Method statically typed input and output
+
+const typeClass = (Constructor, classModel) => {
+  classModel = classModel || Constructor.classModel || Constructor.model
+  const propKeys = Object.keys(classModel.props)
+  const methodKeys = Object.keys(classModel.methods)
+
+  const TypedClass = class TypedClass {
+    constructor (params) {
+      this.baseClass = validateFunc(Constructor, params, {
+        inputModel: classModel.constructor
+      })
+      this.baseName = Constructor.name
+    }
+  }
+
+  propKeys.forEach(function (propKey) {
+    TypedClass.prototype[propKey] = function () {
+      const instance = this
+      return instance.baseClass[propKey]
+    }
+
+    TypedClass.prototype[`set${propKey[0].toUpperCase()}${propKey.slice(1)}`] = function (set) {
+      const instance = this
+      instance.baseClass[propKey] = validate(set, classModel.props[propKey])
+      return instance.baseClass[propKey]
+    }
+  })
+
+  methodKeys.forEach(function (methodKey) {
+    TypedClass.prototype[methodKey] = function (params) {
+      const instance = this
+      return validateFunc(instance.baseClass[methodKey].bind(instance.baseClass), params, {
+        inputModel: classModel.methods[methodKey].inputModel,
+        outputModel: classModel.methods[methodKey].outputModel
+      })
+    }
+  })
+
+  return TypedClass
 }
 
 // ------------------------------------
 // type
 // ------------------------------------
 
-const type = (validationType, value, validationOptions) => {
+const type = (dataType, value, validationModel) => {
   const shouldBypassValidation = () =>
     (process.env.NODE_ENV === 'production' || type.off) && (!type.on || !type.bool)
   if (shouldBypassValidation()) return
+
   try {
-    if (typeof validationType !== 'object') validationType = { type: validationType }
-    return validate(value, Object.assign(validationType, validationOptions))
+    if (validationModel) {
+      if (typeof dataType !== 'object') dataType = { type: dataType }
+      if (validationModel.type) validate(value, validationModel)
+      return validate(value, Object.assign({}, validationModel, dataType))
+    } else {
+      return validate(value, dataType)
+    }
   } catch (err) {
     if (type.warn && !type.bool) {
       console.warn(err)
@@ -537,7 +610,8 @@ const type = (validationType, value, validationOptions) => {
     validate,
     validateFunc,
     type,
-    validations: validationsMaster
+    validations: validationsMaster,
+    typeClass
   }
 
   // Export the Underscore object for **CommonJS**, with backwards-compatibility
