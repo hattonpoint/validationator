@@ -1,6 +1,6 @@
 {
   "name": "validationator",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "A versitile data validator and static type checker. Creat complex models for deeply nested data structures. Create statically typed functions. Switch to bool mode of use in form validation, and much more.",
   "main": "index.js",
   "directories": {

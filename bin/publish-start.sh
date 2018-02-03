@@ -1,7 +1,5 @@
 # !/bin/bash
 yarn test;
-git add .;
-git commit -m 'Publish new version to NPM';
 yarn build;
 cp src/index.js dist/index.js;
 yarn minify;

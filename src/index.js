@@ -1,19 +1,9 @@
-// common/require.js not used because of its perfomance impact
-// there are more operations included in a require than most validations
+const validator = require('validator')
+const { get } = require('lodash')
 
 // ------------------------------------
 // Utilities
 // ------------------------------------
-
-const getFuncParamNames = func => {
-  const STRIP_COMMENTS_DEFAULTS = /(\/\/.*$)|(\/\*[\s\S]*?\*\/)|(\s*=[^,)]*(('(?:\\'|[^'\r\n])*')|("(?:\\"|[^"\r\n])*"))|(\s*=[^,)]*))/mg
-  const ARGUMENT_NAMES = /([^\s,]+)/g
-  const fnStr = func.toString().replace(STRIP_COMMENTS_DEFAULTS, '')
-  let result = fnStr.slice(fnStr.indexOf('(') + 1, fnStr.indexOf(')')).match(ARGUMENT_NAMES)
-  if (result[0] === '{' && result[result.length - 1 === '}']) result = result.slice(1, -1)
-  if (result === null) result = []
-  return result
-}
 
 const includesAnyTest = (str, arrOfStr, options = {}) => {
   let includesAny = false
@@ -36,19 +26,9 @@ const includesAnyTest = (str, arrOfStr, options = {}) => {
   return includesAny
 }
 
-const matchesAny = (test, arr) => {
-  let returnVal = false
-  arr.forEach(item => {
-    if (item === test) returnVal = true
-  })
-  return returnVal
-}
-
 // ------------------------------------
 // validations
 // ------------------------------------
-
-const validator = require('validator')
 
 const validationsMaster = {
   'array': (value, { maxLen, minLen, allChildren, children, includes, notIncludes, includesAny, notIncludesAny, name }) => {
@@ -330,16 +310,15 @@ const validationsMaster = {
 
 const validate = (value, validation) => {
   // setting up definitions
-  validation.name = validation.name || ''
-  const name = validation.name
+  const name = validation.name || ''
   const ON = (validation.on || validate.on)
   const OFF = (validation.off || validate.off)
   const WARN = (validation.warn || validate.warn)
   const BOOL = (validation.bool || validate.bool)
+  const PROD = process.env.NODE_ENV === 'production'
 
   // check for validation bypass early for performance
-  const shouldBypassValidation = () => (process.env.NODE_ENV === 'production' || OFF) && (!ON || !BOOL)
-  if (shouldBypassValidation()) return value
+  if ((PROD || OFF) && (!ON || !BOOL)) return value
 
   // function definitions
   const runOrValidation = name => {
@@ -387,7 +366,7 @@ const validate = (value, validation) => {
       if (typeof validation === 'string') validation = { type: validation }
 
       // Enable primative based api
-      if (typeof validation === 'function') { validation = { type: validation.name } }
+      if (typeof validation === 'function') { validation = { type: name } }
       if (typeof validation.type === 'function') { validation.type = validation.type.name }
       [ 'Boolean', 'Number', 'String', 'Object', 'Array', 'Function' ].forEach(primative => {
         if (typeof validation[primative] === 'function') { validation.type = validation[primative].name }
@@ -395,6 +374,8 @@ const validate = (value, validation) => {
 
       // check to make sure that a type was set
       if (!validation.type) throw new Error(`${name}: ${value}.type is required`)
+
+      // enable shared extend validation option
       if (validation.extend) validation.extend(value, validation)
 
       // craft validation set
@@ -402,8 +383,8 @@ const validate = (value, validation) => {
       if (validate.extensions) validations = Object.assign({}, validations, validate.extensions)
       const validationTypes = Object.keys(validations)
 
+      // run validation loop
       let validationFound = false
-
       validationTypes.forEach(type => {
         if (validation.type.toLowerCase() === type) {
           validations[type](value, validation)
@@ -411,6 +392,7 @@ const validate = (value, validation) => {
         }
       })
 
+      // catch missing validation types
       if (!validationFound) throw new Error(`valitaion type: ${validation.type} not found!`)
 
       // options, options, options
@@ -431,16 +413,60 @@ const validate = (value, validation) => {
 }
 
 // ------------------------------------
+// type
+// ------------------------------------
+
+const type = (dataType, value, validationModel = {}) => {
+  // setting up definitions
+  const ON = (validationModel.on || type.on)
+  const OFF = (validationModel.off || type.off)
+  const WARN = (validationModel.warn || type.warn)
+  const BOOL = (validationModel.bool || type.bool)
+  const PROD = process.env.NODE_ENV === 'production'
+
+  // check for validation bypass early for performance
+  if ((PROD || OFF) && (!ON || !BOOL)) return value
+
+  // wrap validate core
+  // handle options
+  try {
+    if (validationModel) {
+      if (typeof dataType !== 'object') dataType = { type: dataType }
+      if (validationModel.type) validate(value, validationModel)
+      return validate(value, Object.assign({}, validationModel, dataType))
+    } else {
+      return validate(value, dataType)
+    }
+  } catch (err) {
+    if (WARN && !BOOL) {
+      console.warn(err)
+      return value
+    } else if (BOOL) {
+      if (WARN) console.warn(err)
+      return false
+    } else {
+      throw err
+    }
+  }
+}
+
+// ------------------------------------
 // validateFunc
 // ------------------------------------
 
-const typeFunc = (func, options) => {
-  return params => validateFunc(func, params, options)
-}
-
-const validateFunc = (func, params, options = {}) => {
+const validateFunc = (func, params, validation = {}) => {
+  // check inputs
   if (!func) throw new Error('Missing required argument func')
   if (typeof func !== 'function') throw new Error('First argument is not a function!')
+
+  // setting up definitions
+  const name = validation.name || func.name || ''
+  const ON = (validation.on || validateFunc.on)
+  const OFF = (validation.off || validateFunc.off)
+  const WARN = (validation.warn || validateFunc.warn)
+  const PROD = process.env.NODE_ENV === 'production'
+  const inputModel = validation.inputModel || func.inputModel
+  const outputModel = validation.outputModel || func.outputModel
 
   // conform param type to array
   params = Array.isArray(params) ? params : [ params ]
@@ -456,22 +482,19 @@ const validateFunc = (func, params, options = {}) => {
   })()
 
   // check to see if validation should be bypassed
-  if ((process.env.NODE_ENV === 'production' || options.off) && !options.on) return returnVal
-
-  const name = options.name || func.name
-  const inputModel = options.inputModel || func.inputModel
-  const outputModel = options.outputModel || func.outputModel
+  if ((PROD || OFF) && !ON) return returnVal
 
   try {
     // look for undefined output
-    if ((('outputModel' in options && !outputModel) ||
+    if ((('outputModel' in validation && !outputModel) ||
       ('outputModel' in func && !outputModel)) &&
       returnVal !== undefined) throw new Error(`Expected an undefined retrun value but ${typeof returnVal} was found`)
 
+    // run validations
     if (inputModel) validateInput(params, inputModel, func, name)
     if (outputModel) validate(returnVal, outputModel)
   } catch (err) {
-    if (options.warn) {
+    if (WARN) {
       console.warn(err)
       return returnVal
     } else {
@@ -519,17 +542,16 @@ const validateInput = (params, inputModel, func, name) => {
 }
 
 // ------------------------------------
-// typeClass
+// typeFunc
 // ------------------------------------
 
-// class update
+const typeFunc = (func, options) => {
+  return params => validateFunc(func, params, options)
+}
 
-// requirements:
-// Define a model of a class to be able to wrap the class in validation
-// Wrap every instance of the class in typedness
-// Props wraps value in validation and create get / set extensions
-// - will have to be classes
-// Method statically typed input and output
+// ------------------------------------
+// typeClass
+// ------------------------------------
 
 const typeClass = (Constructor, classModel) => {
   classModel = classModel || Constructor.classModel || Constructor.model
@@ -572,46 +594,55 @@ const typeClass = (Constructor, classModel) => {
 }
 
 // ------------------------------------
-// type
+// TypedClass
 // ------------------------------------
 
-const type = (dataType, value, validationModel) => {
-  const shouldBypassValidation = () =>
-    (process.env.NODE_ENV === 'production' || type.off) && (!type.on || !type.bool)
-  if (shouldBypassValidation()) return
-
-  try {
-    if (validationModel) {
-      if (typeof dataType !== 'object') dataType = { type: dataType }
-      if (validationModel.type) validate(value, validationModel)
-      return validate(value, Object.assign({}, validationModel, dataType))
-    } else {
-      return validate(value, dataType)
-    }
-  } catch (err) {
-    if (type.warn && !type.bool) {
-      console.warn(err)
-      return value
-    } else if (type.bool) {
-      if (type.warn) console.warn(err)
-      return false
-    } else {
-      throw err
-    }
+const TypedClass = class TypedClass {
+  setProps (changes) {
+    Object.keys(changes).forEach(changeKey => {
+      if (get(this.constructor, `model.props.${changeKey}`)) {
+        this[changeKey] = validate(changes[changeKey], this.constructor.model.props[changeKey])
+      }
+      this[changeKey] = changes[changeKey]
+    })
   }
 }
+
+// ------------------------------------
+// TypedVal
+// ------------------------------------
+
+const TypedVal = class TypedVal {
+  constructor (value, validation) {
+    validation = validation || this.validation || this.model
+    this.value = validate(value, validation)
+    this.validation = validation
+  }
+
+  get () { return this.value }
+  g () { return this.get() }
+
+  set (newVal) {
+    this.value = validate(newVal, this.validation)
+    return this.value
+  }
+  s (newVal) { return this.set(newVal) }
+};
 
 // ------------------------------------
 // exports
 // ------------------------------------
 
 (root => {
-  var _ = {
-    validate,
-    validateFunc,
-    type,
+  const _ = {
     validations: validationsMaster,
-    typeClass
+    validate,
+    type,
+    validateFunc,
+    typeFunc,
+    typeClass,
+    TypedClass,
+    TypedVal
   }
 
   // Export the Underscore object for **CommonJS**, with backwards-compatibility

@@ -1,7 +1,17 @@
 const assert = require('chai').assert
 
-module.exports = (validate, validateFunc, type, typeClass) => {
-  describe('validate.js tests', () => {
+module.exports = (validationator) => {
+  const { validations, validate, type, validateFunc, typeFunc, typeClass, TypedClass, TypedVal } = validationator
+
+  describe('VALIDATIONS', () => {
+    it('should throw an error if used directly', () => {
+      const email = 'info@hattonpoint.com'
+      validations.email(email)
+      assert.throws(() => validations.number(email))
+    })
+  })
+
+  describe('VALIDATE', () => {
     context('STRING', () => {
       const emailRegEx = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
 
@@ -476,105 +486,7 @@ module.exports = (validate, validateFunc, type, typeClass) => {
     })
   })
 
-  const { get } = require('lodash')
-
-  describe('Typed Class', () => {
-    context('The typed hooligan class', () => {
-
-      const TypedClass = class TypedClass {
-        setState (changes) {
-          Object.keys(changes).forEach(changeKey => {
-            if (get(this, `model.props.${changeKey}`)) {
-              this[changeKey] = validate(changes[changeKey], this.model.props[changeKey])
-            }
-            this[changeKey] = changes[changeKey]
-          })
-        }
-      }
-
-      let Hooligan = class Hooligan extends TypedClass {
-        constructor ({ name, height }) {
-          super({ name, height })
-          this.name = name
-          this.height = height
-          this.stomach = []
-          this.mood = 'grumpy'
-          this.check = typeClass(Hooligan, hooliganModel)
-        }
-
-        eat (food) {
-          this.setState({
-            stomach: [ ...this.stomach, food ]
-          })
-
-          return 'uhh.. not food'
-        }
-
-        drink (drank) {
-          if (drank === 'coffee') this.mood = 'better'
-        }
-      }
-
-      const hooliganModel = {
-        constructor: {
-          name: String,
-          height: Number
-        },
-        props: {
-          name: String,
-          stomach: { Array, allChildren: String },
-          mood: String,
-          height: Number
-        },
-        methods: {
-          eat: {
-            inputModel: String,
-            outputModel: String
-          },
-          drink: {
-            inputModel: String,
-            outputModel: undefined
-          }
-        }
-      }
-
-      Hooligan.model = hooliganModel
-
-      const TypedHooligan = typeClass(Hooligan)
-
-      it('should throw an error if the params passed into the constructor are not correct', () => {
-        assert.throws(() => new TypedHooligan(12))
-      })
-
-      it('should create a getter and typed setter class for props defined in model', () => {
-        const Ian = new TypedHooligan({ name: 'Ian', height: 60 })
-        assert(Ian.name() === 'Ian')
-        assert(Ian.setName('Ignatious') === 'Ignatious')
-        assert(Ian.name() === 'Ignatious')
-        assert.throws(() => Ian.setName(123))
-      })
-
-      it('should type the input and output of defined methods', () => {
-        const Ian = new TypedHooligan({ name: 'Ian', height: 60 })
-        Ian.drink('coffee')
-        assert.throws(() => Ian.drink(123))
-
-        console.log('Ian.stomach() :  : ', Ian.stomach())
-        Ian.eat('apple')
-        Ian.eat('apple')
-        console.log('Ian.stomach() :  : ', Ian.stomach())
-
-        let punkRobotModel = hooliganModel
-        punkRobotModel.methods.eat.outputModel = Number
-
-        const Robot = typeClass(Hooligan, punkRobotModel)
-        const rob = new Robot({ name: 'rob', height: 60 })
-        assert.throws(() => rob.eat('apple'))
-      })
-    })
-  })
-
-  describe('type.js tests', () => {
+  describe('TYPE', () => {
     const x = type
     it('should work like so', () => {
       type(String, 'asdf')
@@ -587,7 +499,7 @@ module.exports = (validate, validateFunc, type, typeClass) => {
     })
   })
 
-  describe('validateFunc.js tests', () => {
+  describe('VALIDATEFUNC', () => {
     context('validate output only', () => {
       it('should validate the output', () => {
         const testFunc = () => 'asdf'
@@ -688,7 +600,153 @@ module.exports = (validate, validateFunc, type, typeClass) => {
     })
   })
 
-  describe('fuelsy tests', () => {
+  describe('TYPEFUNC', () => {
+    it('should return a typed function instance', () => {
+      const increment = num => (num + 1)
+      const test1 = typeFunc(increment, { inputModel: Number, outputModel: Number })
+      assert(test1(1) === 2)
+      assert.throws(() => test1('asdf'))
+      increment.inputModel = Number
+      increment.outputModel = Number
+      const test2 = typeFunc(increment)
+      assert(test2(1) === 2)
+      assert.throws(() => test2('asdf'))
+    })
+  })
+
+  // shared by the next two describe blocks
+  const hooliganModel = {
+    constructor: {
+      name: String,
+      height: Number
+    },
+    props: {
+      name: String,
+      stomach: { Array, allChildren: String },
+      mood: String,
+      height: Number
+    },
+    methods: {
+      eat: {
+        inputModel: String,
+        outputModel: String
+      },
+      drink: {
+        inputModel: String,
+        outputModel: undefined
+      }
+    }
+  }
+
+  describe('TYPECLASS', () => {
+    context('The typed hooligan class', () => {
+      let Hooligan = class Hooligan {
+        constructor ({ name, height }) {
+          this.name = name
+          this.height = height
+          this.stomach = []
+          this.mood = 'grumpy'
+        }
+
+        eat (food) {
+          this.stomach = [ ...this.stomach, food ]
+
+          return 'uhh.. not food'
+        }
+
+        drink (drank) {
+          if (drank === 'coffee') this.mood = 'better'
+        }
+      }
+
+      Hooligan.model = hooliganModel
+
+      const TypedHooligan = typeClass(Hooligan)
+
+      it('should throw an error if the params passed into the constructor are not correct', () => {
+        assert.throws(() => new TypedHooligan(12))
+      })
+
+      it('should create a getter and typed setter class for props defined in model', () => {
+        const Ian = new TypedHooligan({ name: 'Ian', height: 60 })
+        assert(Ian.name() === 'Ian')
+        assert(Ian.setName('Ignatious') === 'Ignatious')
+        assert(Ian.name() === 'Ignatious')
+        assert.throws(() => Ian.setName(123))
+      })
+
+      it('should type the input and output of defined methods', () => {
+        const Ian = new TypedHooligan({ name: 'Ian', height: 60 })
+        Ian.drink('coffee')
+        assert.throws(() => Ian.drink(123))
+        assert(Ian.stomach().length === 0)
+        Ian.eat('apple')
+        Ian.eat('apple')
+        assert(Ian.stomach().length === 2)
+
+        let punkRobotModel = hooliganModel
+        punkRobotModel.methods.eat.outputModel = Number
+
+        const Robot = typeClass(Hooligan, punkRobotModel)
+        const rob = new Robot({ name: 'rob', height: 60 })
+        assert.throws(() => rob.eat('apple'))
+      })
+    })
+  })
+
+  describe('TYPEDCLASS', () => {
+    it('should allow you to use setProps within a class to maintain typed class proptypes', () => {
+      const Hooligan = class Hooligan extends TypedClass {
+        constructor ({ name, height }) {
+          super({ name, height })
+          this.name = name
+          this.height = height
+          this.stomach = []
+          this.mood = 'grumpy'
+        }
+
+        eat (food) {
+          this.setProps({
+            stomach: [ ...this.stomach, food ]
+          })
+
+          return 'uhh.. not food'
+        }
+
+        drink (drank) {
+          if (drank === 'coffee') this.mood = 'better'
+        }
+      }
+
+      Hooligan.model = hooliganModel
+
+      const Ian = new Hooligan({ name: 'Ian', height: 60 })
+      assert(Ian.stomach.length === 0)
+      Ian.eat('apple')
+      Ian.eat('apple')
+      assert(Ian.stomach.length === 2)
+      assert.throws(() => Ian.eat(123))
+    })
+  })
+
+  describe('TYPEDVAL', () => {
+    it('should allow you to create typed values with getter and setter methods', () => {
+      const myEmail = 'info@hattonpoint.com'
+      const typedEmail = new TypedVal(myEmail, { type: 'email' })
+      const notEmail = 'hattonpoint.com'
+      assert.throws(() => new TypedVal(notEmail, { type: 'email' }))
+      assert(typedEmail.get() === myEmail)
+      assert(typedEmail.g() === myEmail)
+      const newEmail = 'newEmail@example.com'
+      typedEmail.set(newEmail)
+      assert.throws(() => typedEmail.set(notEmail))
+      assert(typedEmail.g() === newEmail)
+      typedEmail.s(myEmail)
+      assert(typedEmail.g() === myEmail)
+    })
+  })
+
+  describe('Fuelsy Tests', () => {
     it('should validate the leads even after deploying to npm', () => {
       const leadValidationModel = (lead, bool) => ({ Object,
         bool,

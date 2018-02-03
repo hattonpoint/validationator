@@ -6,16 +6,20 @@
         style="width: 500px, display: block; margin: auto;"
       />
     </a>
-    <p>Current version: 2.0.3</p>
+    <p>Current version: 2.0.4</p>
     <a href='./docs/changelog.md'><p>Change log</p></a>
   </div>
-</centergs>
+</center>
 
 Validationator is a flexible and powerful javascript typing & data validation library. Validationator has four exports:
   * **validations** - an object of validation methods. These are used to power all other functions of the library. They can be extended, added to, and used ad hoc.
   * **validate** - the core of the validationator library. Define a validation model of your data and validate to either return the original value or throw a useful error. Use warn or bool mode to override this behavior.
-  * **validateFunc** - define the input and output models of a function much like react PropTypes. Create statically typed functions. Uses the validate core.
   * **type** - a wrapper around the validate core library that allows for an alternative more traditional typed language syntax.
+  * **validateFunc** - define the input and output models of a function much like react PropTypes. Create statically typed functions. Uses the validate core.
+  * **typeFunc** - pass in a function and validation model to return a reusable typed function
+  * **typeClass** - create fully typed classes by defining a class model
+  * **TypeClass** - allows for use of setProps in classes for internal static typing.
+  * **TypedVal** - wrap values in geter and setter function that consistently enforce validation
 
 Why use validationator:
 
@@ -69,6 +73,26 @@ validate('asdf', {
 // use various non data type validations
 validate('info@hattonpoint.com', 'email')
 ```
+
+### type
+An alternative syntax for the validate core. Define the data type first and options after. Define a secondary data type and validate with same options object (the options object inherits the options of the data type). 
+
+```js
+const homepage = 'www.hattonpoint.com'
+type(String, homepage)
+
+type(String, homepage, {
+  maxLen: 100
+})
+
+const x = type // read 'check'
+
+const validatedUrl = x(String, homepage, {
+  type: 'url',
+  maxLen: 100
+})
+```
+
 ### validateFunc
 Syntactic sugar that makes it easier to create statically typed functions. Define an inputModel and outputModel to functions.
 
@@ -82,24 +106,157 @@ validateFunc(increment, 3)
 // There are various ways to create statically typed
 // functions and classes discussed in sections below.
 ```
-### Type
-An alternative syntax for the validate core. Define the data type first and options after. Define a secondary data type and validate with same options object (the options object inherits the options of the data type). 
+
+### typeFunc
+pass in a function and validation model to return a reuseable typed function
+```js
+const increment = num => (num + 1)
+const typedIncrement = typeFunc(increment, {
+  inputModel: Number,
+  outputModel: Number
+})
+
+typedIncrement(1) // ==> 2
+typedIncrement('asdf') // throws error
+```
+
+### typeClass
+
+Using the fundamental components of validate and validateFunc, typeClass allows you to create fully typed js classes be defining a separate class validation model. Instance construction and prop changes and protected by validation checks. Methods are typed using validateFunc. This gives you many of the benefits of static typing without having to clutter up your original code.
 
 ```js
-const homepage = 'www.hattonpoint.com'
-type(String, homepage)
+let Hooligan = class Hooligan {
+  constructor ({ name, height }) {
+    this.name = name
+    this.height = height
+    this.stomach = []
+    this.mood = 'grumpy'
+  }
 
-type(String, homepage, {
-  maxLen: 100
-})
+  eat (food) {
+    this.stomach = [ ...this.stomach, food ]
 
-const x = type
+    return 'uhh.. not food'
+  }
 
-const validatedUrl = x(String, homepage, {
-  type: 'url',
-  maxLen: 100
-})
+  drink (drank) {
+    if (drank === 'coffee') this.mood = 'better'
+  }
+}
+
+Hooligan.model = {
+    constructor: {
+      name: String,
+      height: Number
+    },
+    props: {
+      name: String,
+      stomach: { Array, allChildren: String },
+      mood: String,
+      height: Number
+    },
+    methods: {
+      eat: {
+        inputModel: String,
+        outputModel: String
+      },
+      drink: {
+        inputModel: String,
+        outputModel: undefined
+      }
+    }
+  }
+
+Hooligan = typeClass(Hooligan)
+
+// The parameters passed into the constructor are typechecked
+const hooligan = new Hooligan(12) // ==> throws error
+
+const Ian = new Hooligan({ name: 'Ian', height: 60 })
+
+// After converting your class to a typed class, call your props
+// as functions. This is your getter method. Getter methods do
+// not do any validation since the setter and constructor validation
+// should ensure it is always the correct type.
+
+Ian.name() // ==> 'Ian'
+Ian.name // ==> undefined
+
+// typeClass creates camelCased setter methods for your defined
+// props. These methods take in a new value and validate it
+// before setting the class prop value. The setter methods return
+// the new value of the prop, or throw and error.
+
+Ian.setName('Ignatius') // ==> 'Ignatius'
+Ian.name() // ==> 'Ignatius'
+Ian.setName(123) // throws error
+
+// The inputs and outputs of defined methods are wrapped using the
+// validateFunc function.
+
+const Ian = new Hooligan({ name: 'Ian', height: 60 })
+Ian.mood() // ==> 'grumpy'
+Ian.drink('coffee')
+Ian.mood() // ==> 'better'
+Ian.drink(123) // throws error
 ```
+### TypedClass
+One of the weaknesses of typeClass is that still allows methods to set the props of a class internally without validation. TypedClass was introduced to address this issue. Extend your classes from TypedClass and pass constructor props directly into super to gain access to setProps in your class methods. setProps operates much like setState in react. Pass in an object with the keys of the props you want to change with updated values. Usine setProps these values are validated whenever you attempt to update them.
+
+```js
+const Hooligan = class Hooligan extends TypedClass { // updated
+  constructor ({ name, height }) { // updated
+    super({ name, height })
+    this.name = name
+    this.height = height
+    this.stomach = []
+    this.mood = 'grumpy'
+  }
+
+  eat (food) {
+    this.setProps({ // updated
+      stomach: [ ...this.stomach, food ]
+    })
+
+    return 'uhh.. not food'
+  }
+
+  drink (drank) {
+    if (drank === 'coffee') this.mood = 'better'
+  }
+}
+
+Hooligan.model = hooliganModel
+
+```
+
+### TypedVal
+Wrap values in geter and setter methods that consistently enforce validation.
+
+```js
+const myEmail = 'info@hattonpoint.com'
+const typedEmail = new TypedVal(myEmail, { type: 'email' })
+
+// values are checked on construction
+const notEmail = 'hattonpoint.com'
+new TypedVal(notEmail, { type: 'email' }) // throws error
+
+// new values are accessed with get and set methods
+typedEmail.get() // ==> myEmail
+
+// use g and s shorthand methods
+typedEmail.g() // ==> myEmail
+
+const newEmail = 'newEmail@example.com'
+typedEmail.set(newEmail) // newEamil
+typedEmail.g() // ==> newEmail
+
+typedEmail.set(notEmail) // throws error
+
+typedEmail.s(myEmail) // ==> myEmail
+typedEmail.g() // ==> myEmail
+```
+
 
 # API Details
 
@@ -658,21 +815,22 @@ testFunc.outputModel = {
  
 validateFunc(testFunc, [ 50, 'a', false ])
 ```
+
 ```javascript
 // or contained within the function itself
  
-const testFunc2 = (num, char, bool) => {
-  execution.inputModel = [
-      { Number, min: 40 },
-      { String, maxLength: 1 },
-      { Boolean, notRequired: true },
-  ]
- 
+const testFunc2 = (num, char, bool) => { 
   const execution = (num, char, bool) => ({
     see: 'it works',
     coolness: 1000000,
     itSucks: false,
   })
+
+  execution.inputModel = [
+      { Number, min: 40 },
+      { String, maxLength: 1 },
+      { Boolean, notRequired: true },
+  ]
  
   execution.outputModel = {
     Object,

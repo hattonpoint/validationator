@@ -1,5 +1,9 @@
 # Change Log
 
+### V 2.0.4
+Add typeClass, typeFunc, TypedClass, and TypedVal exports.
+Rebase git.
+
 ### V 2.0.3
 GH-7 Add instance and strict-instance validation types
 
